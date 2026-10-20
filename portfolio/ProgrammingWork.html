@@ -1,104 +1,111 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Models Page</title>
-    <link rel="stylesheet" href="../style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Programming | Jack Danis</title>
+  <meta name="description" content="Creative coding and web projects by Jack Danis using JavaScript, p5.js, HTML and CSS.">
+  <link rel="canonical" href="https://jackdanis.github.io/portfolio/ProgrammingWork.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Programming | Jack Danis">
+  <meta property="og:description" content="Creative coding and web projects by Jack Danis using JavaScript, p5.js, HTML and CSS.">
+  <meta property="og:url" content="https://jackdanis.github.io/portfolio/ProgrammingWork.html">
+  <meta property="og:image" content="https://jackdanis.github.io/images/web/og.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#fbfbf9">
+  <link rel="icon" href="../images/web/favicon.png">
+  <link rel="preload" href="../fonts/chicagoflf-webfont.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../css/site.css">
 </head>
 <body>
-      <nav class="nav">
-        <a href='../index.html'><img src='../images/Logo.png' alt='menu' width="200em" /></a>
+  <a class="skip-link" href="#main">Skip to content</a>
 
-        <input type="checkbox" class="side-menu" id="side-menu" onclick="togglemenu()"/>
-        <label for="side-menu" class="hamb"><span class="hamb-line"></span></label>
-
-        <ul id="menuList">
-          <li><a href="../index.html" class="nav_link">Main Page</a></li>
-          <li><a href="../portfolio.html" class="nav_link">Portfolio</a></li>
-          <li><a href="../aboutme.html" class="nav_link">About Me</a></li>
-          <li><a href="../contact.html" class="nav_link">Contact</a></li>
+  <!--Header-->
+  <header class="site-header">
+    <div class="container">
+      <a class="logo" href="../index.html" aria-label="Jack Danis, home"><img src="../images/Logo.png" alt="Jack" width="104" height="43"></a>
+      <button class="nav-toggle" aria-label="Menu" aria-expanded="false" aria-controls="site-nav"><span></span></button>
+      <nav class="site-nav" id="site-nav" aria-label="Main">
+        <ul class="nav-list">
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="../portfolio.html" aria-current="page">Work</a></li>
+          <li><a href="../aboutme.html">About</a></li>
+          <li><a href="../contact.html">Contact</a></li>
         </ul>
       </nav>
+    </div>
+  </header>
 
-      <section class="introduction-section">
-        <h1>Programming Work</h1>
-        <div class="portfolio-gallery">
-          <!--1st Project-->
-          <h2>ATLAS - JavaScript & p5</h2>
-          <div class="portfolio-gallery-row">
-            <div class="portfolio-gallery-item">
-              <a href="../PersonalProj/MusicPlayer/music.html">
-              <img src="../images/Programming/MusicPlayer.png" width="300px"></a>
-              <figcaption>Music Player Website & Dynamic Backgrounds with JavaScript</figcaption>
-            </div>
-          </div>
-          <div class="portfolio-gallery-row">
-            <div class="portfolio-text">
-              <p>This was created during my time at ATLAS as a way to see if I could implement music into a website. This also served to test my ability to change images on command using a combination of CSS and JS without relying on any advanced libraries (besides p5). Try putting your cursor over the flying triangles, they'll try to avoid it! This project is also responsive! Meaning it will properly resize the music player and p5 animation for mobile and desktop, try resizing the screen, it'll still work!</p>
-            </div>
-          </div>
-          <div class="portfolio-gallery-row">
-            <div class="portfolio-gallery-item">
-              <a href="../p5Projects/p5demo.html">
-              <img src="../images/Programming/p5js.png" width="300px"></a>
-              <figcaption>Assortment of Creative Projects using JavaScript and the p5 Library</figcaption>
-            </div>
-          </div>
-          <br>
-          <h2>ATLAS HTML & CSS Assignments</h2>
-          <div class="portfolio-gallery-row">
-            <div class="portfolio-gallery-item">
-              <a href="../ICA&Assignments/Assignment_2_Basic_Website/Assignment2.html">
-              <p>Assignment 2 - Basic Website Test</p></a>
-              <figcaption>My first true website assignment and an ugly one at that! But it has some fun CSS tweaks...?</figcaption>
-            </div>
-            <div class="portfolio-gallery-item">
-              <a href="../ICA&Assignments/Assignment_3_Encyclopedia/Assignment3.html">
-              <p>Assignment 3 - Encyclopedia</p></a>
-              <figcaption>A basic Encyclopedia with information pulled from an open-source project.</figcaption>
-            </div>
-            <div class="portfolio-gallery-item">
-              <a href="../ICA&Assignments/Assignment_8/assignment8.html">
-              <p>Assignment 8 - Random Story Generator</p></a>
-              <figcaption>A madlibs type story generator that changes based on the given information and on the version of English spoken by the user.</figcaption>
-            </div>
-            <div class="portfolio-gallery-item">
-              <a href="../ICA&Assignments/Assignment_9/index.html">
-              <p>Assignment 9 - Basic Image Gallery</p></a>
-              <figcaption>A basic example of an image gallery possible through HTML / CSS.</figcaption>
-            </div>
-            <div class="portfolio-gallery-item">
-              <a href="../ICA&Assignments/Assignment11_ElectricBoogaloo/assignment11.html">
-              <p>Assignment 11 - Random Pokemon Generator</p></a>
-              <figcaption>This website serves as an example of my ability to pull data from an array and have it appear on a site.</figcaption>
-            </div>
-            <div class="portfolio-gallery-item">
-              <a href="../ICA&Assignments/wa12/wa12.html">
-              <p>Assignment 12 - Terrible Phone Number Entry UI / UX</p></a>
-              <figcaption>This project is an example of how I can create a wonderful user-interface for a project, except I chose to create a deliberately terrible UI. It's visually interesting at the very least, and is a bit of a meme in the UI / UX world to create deliberately bad UI / UX such as this.</figcaption>
-            </div>
-          </div>
+  <main id="main">
+    <section class="page-head">
+      <div class="container">
+        <a class="back-link" href="../portfolio.html">&larr; All work</a>
+        <p class="eyebrow" style="margin-top:2rem">Code</p>
+        <h1>Programming</h1>
+        <p class="lede">Creative coding experiments and web projects from CU Boulder&rsquo;s ATLAS program.</p>
+        <dl class="meta">
+          <div><dt>Languages</dt><dd>JavaScript, HTML, CSS</dd></div>
+          <div><dt>Libraries</dt><dd>p5.js</dd></div>
+          <div><dt>Context</dt><dd>ATLAS, CU Boulder; personal</dd></div>
+        </dl>
+      </div>
+    </section>
 
+    <section class="project">
+      <div class="container">
+        <div class="project-head">
+          <div><p class="eyebrow">JavaScript &middot; p5.js</p><h2>Music player</h2></div>
+          <div class="prose">
+              <p>Built at ATLAS to see if I could bring music into a website and swap images on command with CSS and JavaScript, without relying on advanced libraries (besides p5). Hover over the flying triangles and they&rsquo;ll try to avoid your cursor. It&rsquo;s fully responsive too, so the player and animation resize for mobile and desktop.</p>
+              <p><a href="../PersonalProj/MusicPlayer/music.html">Open the music player &rarr;</a></p>
+          </div>
         </div>
-      </section>
+        <div class="media-grid cols-2">
+            <a href="../PersonalProj/MusicPlayer/music.html"><figure class="framed">
+              <img src="../images/web/MusicPlayer.webp" alt="Screenshot of the music player" width="500" height="500" loading="lazy">
+              <figcaption>Music player with dynamic backgrounds</figcaption>
+            </figure></a>
+            <a href="../p5Projects/p5demo.html"><figure class="framed">
+              <img src="../images/web/p5js.webp" alt="Screenshot of p5.js sketches" width="1022" height="473" loading="lazy">
+              <figcaption>An assortment of creative sketches with p5.js</figcaption>
+            </figure></a>
+        </div>
+      </div>
+    </section>
 
-    
-       <!--JavaScript-->
-       <script>
-        let menuList = document.getElementById("menuList");
-        menuList.style.maxHeight = "0px";
-        function togglemenu(){
-          if(menuList.style.maxHeight == "0px")
-          {
-            menuList.style.maxHeight = "18rem";
-          }
-          else
-          {
-            menuList.style.maxHeight = "0px";
-          }
-        }
-      </script>
+    <section class="project">
+      <div class="container">
+        <div class="project-head">
+          <div><p class="eyebrow">HTML &middot; CSS &middot; JS</p><h2>ATLAS assignments</h2></div>
+          <div class="prose"><p>Smaller web projects from my coursework.</p></div>
+        </div>
+        <ul class="link-list">
+          <li><a href="../ICA&amp;Assignments/Assignment_2_Basic_Website/Assignment2.html"><strong>Basic website</strong><span>My first real website assignment, with a few fun CSS tweaks.</span><span class="arrow" aria-hidden="true">&rarr;</span></a></li>
+          <li><a href="../ICA&amp;Assignments/Assignment_3_Encyclopedia/Assignment3.html"><strong>Encyclopedia</strong><span>A basic encyclopedia with content pulled from an open-source project.</span><span class="arrow" aria-hidden="true">&rarr;</span></a></li>
+          <li><a href="../ICA&amp;Assignments/Assignment_8/assignment8.html"><strong>Random story generator</strong><span>A Mad Libs-style generator that adapts to your inputs and your variety of English.</span><span class="arrow" aria-hidden="true">&rarr;</span></a></li>
+          <li><a href="../ICA&amp;Assignments/Assignment_9/index.html"><strong>Image gallery</strong><span>An image gallery built with HTML and CSS.</span><span class="arrow" aria-hidden="true">&rarr;</span></a></li>
+          <li><a href="../ICA&amp;Assignments/Assignment11_ElectricBoogaloo/assignment11.html"><strong>Random Pok&eacute;mon generator</strong><span>Pulls data from an array and renders it on the page.</span><span class="arrow" aria-hidden="true">&rarr;</span></a></li>
+          <li><a href="../ICA&amp;Assignments/wa12/wa12.html"><strong>Deliberately terrible phone number UI</strong><span>A playful take on the UI/UX meme of building intentionally bad interfaces.</span><span class="arrow" aria-hidden="true">&rarr;</span></a></li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+  <!--Footer-->
+  <footer class="site-footer">
+    <div class="container">
+      <p>&copy; <span data-year>2026</span> Jack Danis</p>
+      <ul class="footer-links">
+        <li><a href="mailto:danisjack0114@gmail.com">Email</a></li>
+        <li><a href="https://www.linkedin.com/in/jackdanis/">LinkedIn</a></li>
+        <li><a href="https://github.com/jackdanis">GitHub</a></li>
+        <li><a href="https://www.instagram.com/jack__danis/">Instagram</a></li>
+      </ul>
+    </div>
+    <div class="triangle-strip" aria-hidden="true"></div>
+  </footer>
+
+  <script src="../js/site.js"></script>
 </body>
 </html>
