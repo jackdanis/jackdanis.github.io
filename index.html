@@ -1,55 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jack Danis @ GitHub</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jack Danis | Creative Technologist</title>
+  <meta name="description" content="Jack Danis is a Chicago-based creative technologist working across marketing, graphic design, 3D, video and code.">
+  <link rel="canonical" href="https://jackdanis.github.io/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Jack Danis | Creative Technologist">
+  <meta property="og:description" content="Jack Danis is a Chicago-based creative technologist working across marketing, graphic design, 3D, video and code.">
+  <meta property="og:url" content="https://jackdanis.github.io/">
+  <meta property="og:image" content="https://jackdanis.github.io/images/web/og.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#fbfbf9">
+  <link rel="icon" href="images/web/favicon.png">
+  <link rel="preload" href="fonts/chicagoflf-webfont.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/site.css">
 </head>
-<body class="mainpageBG">
-   
-      <!--Navigation Menu-->
-      <nav class="nav">
-        <a href='index.html'><img src='images/Logo.png' alt='menu' width="200em" /></a>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
 
-        <input type="checkbox" class="side-menu" id="side-menu" onclick="togglemenu()"/>
-        <label for="side-menu" class="hamb"><span class="hamb-line"></span></label>
-
-        <ul id="menuList">
-          <li><a href="index.html" class="nav_link">Main Page</a></li>
-          <li><a href="portfolio.html" class="nav_link">Portfolio</a></li>
-          <li><a href="aboutme.html" class="nav_link">About Me</a></li>
-          <li><a href="contact.html" class="nav_link">Contact</a></li>
+  <!--Header-->
+  <header class="site-header">
+    <div class="container">
+      <a class="logo" href="index.html" aria-label="Jack Danis, home"><img src="images/Logo.png" alt="Jack" width="104" height="43"></a>
+      <button class="nav-toggle" aria-label="Menu" aria-expanded="false" aria-controls="site-nav"><span></span></button>
+      <nav class="site-nav" id="site-nav" aria-label="Main">
+        <ul class="nav-list">
+          <li><a href="index.html" aria-current="page">Home</a></li>
+          <li><a href="portfolio.html">Work</a></li>
+          <li><a href="aboutme.html">About</a></li>
+          <li><a href="contact.html">Contact</a></li>
         </ul>
       </nav>
-    
-      <!--Content-->
-      <div class="hello-text">
-        <h2 class="hello_h2">Hi! My name <br>is <span class="hello_h2 rainbow_text_animated">Jack Danis</span></h2>
-        <p class="hello_desc">I'm a Creative Technologist!</p>
-        <a class="resumebtn" href="./images/JackDanisResume.pdf">DOWNLOAD RESUME</a>  
-      </div>
-      
-     
+    </div>
+  </header>
 
-      <!--Footer-->
-      <div class="foot"></div>
-  
-      <!--JavaScript-->
-      <script>
-        let menuList = document.getElementById("menuList");
-        menuList.style.maxHeight = "0px";
-        function togglemenu(){
-          if(menuList.style.maxHeight == "0px")
-          {
-            menuList.style.maxHeight = "18rem";
-          }
-          else
-          {
-            menuList.style.maxHeight = "0px";
-          }
-        }
-      </script>
+  <main id="main">
+    <section class="hero">
+      <div class="container">
+        <p class="eyebrow">Creative Technologist &middot; Chicago, IL</p>
+        <h1>Hi, I&rsquo;m<br><span class="gradient-text">Jack Danis</span></h1>
+        <p class="lede">I pair a marketing background with design, 3D, video and code to make work that looks good and does its job.</p>
+        <div class="btn-row">
+          <a class="btn btn-primary" href="portfolio.html">View my work <span aria-hidden="true">&rarr;</span></a>
+          <a class="btn btn-ghost" href="images/JackDanisResume.pdf">Download r&eacute;sum&eacute;</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="section-head">
+          <h2>Selected work</h2>
+          <a class="text-link" href="portfolio.html">All projects</a>
+        </div>
+        <div class="work-grid">
+        <a class="card" href="portfolio/3DModelling.html">
+          <div class="card-media"><img src="images/web/RoomRender1.webp" alt="Render of a wooden installation platform surrounded by water" loading="lazy"></div>
+          <div class="card-body">
+            <span class="eyebrow">3D &middot; Rendering</span>
+            <h3>3D Modelling &amp; Rendering <span class="arrow" aria-hidden="true">&rarr;</span></h3>
+            <p>Product models, furniture and an installation piece in Fusion 360, plus Blender experiments.</p>
+          </div>
+        </a>
+        <a class="card" href="portfolio/VolleySolutions.html">
+          <div class="card-media yt"><img src="https://i.ytimg.com/vi/epfxQAtsuj4/hqdefault.jpg" alt="Still from a Greenscape commercial" loading="lazy"></div>
+          <div class="card-body">
+            <span class="eyebrow">Video &middot; Client work</span>
+            <h3>VolleySolutions <span class="arrow" aria-hidden="true">&rarr;</span></h3>
+            <p>Commercials and promo videos for landscaping, materials and farming clients.</p>
+          </div>
+        </a>
+        <a class="card" href="portfolio/GraphicDesign.html">
+          <div class="card-media"><img src="images/web/Hackthrough.webp" alt="Hackthrough graphic design" loading="lazy"></div>
+          <div class="card-body">
+            <span class="eyebrow">Graphic Design</span>
+            <h3>Graphic Design <span class="arrow" aria-hidden="true">&rarr;</span></h3>
+            <p>Posters, book design, logos and cover art from class and commissions.</p>
+          </div>
+        </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!--Footer-->
+  <footer class="site-footer">
+    <div class="container">
+      <p>&copy; <span data-year>2026</span> Jack Danis</p>
+      <ul class="footer-links">
+        <li><a href="https://www.linkedin.com/in/jackdanis/">LinkedIn</a></li>
+        <li><a href="https://github.com/jackdanis">GitHub</a></li>
+        <li><a href="https://www.instagram.com/jack__danis/">Instagram</a></li>
+      </ul>
+    </div>
+    <div class="triangle-strip" aria-hidden="true"></div>
+  </footer>
+
+  <script src="js/site.js"></script>
 </body>
 </html>
