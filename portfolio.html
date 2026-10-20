@@ -1,177 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Experience | Jack Danis</title>
-  <meta name="description" content="Jack Danis&rsquo;s work experience: AI strategy at Quad, startup consulting at Vivrato, ad operations at LaSalle Network, and client marketing at Volley Solutions.">
-  <link rel="canonical" href="https://jackdanis.github.io/portfolio.html">
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="Experience | Jack Danis">
-  <meta property="og:description" content="Jack Danis&rsquo;s work experience: AI strategy at Quad, startup consulting at Vivrato, ad operations at LaSalle Network, and client marketing at Volley Solutions.">
-  <meta property="og:url" content="https://jackdanis.github.io/portfolio.html">
-  <meta property="og:image" content="https://jackdanis.github.io/images/web/og.jpg">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="theme-color" content="#fbfbf9">
-  <link rel="icon" href="images/web/favicon.png">
-  <link rel="preload" href="fonts/chicagoflf-webfont.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/site.css">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work | Jack Danis</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <a class="skip-link" href="#main">Skip to content</a>
+<body style="background-color: white; background-size: cover; background-position: center center">
+      <!--Navigation Menu-->
+      <nav class="nav">
+        <a href='index.html'><img src='images/Logo.png' alt='menu' width="200em" /></a>
 
-  <!--Header-->
-  <header class="site-header">
-    <div class="container">
-      <a class="logo" href="index.html" aria-label="Jack Danis, home"><img src="images/Logo.png" alt="Jack" width="104" height="43"></a>
-      <button class="nav-toggle" aria-label="Menu" aria-expanded="false" aria-controls="site-nav"><span></span></button>
-      <nav class="site-nav" id="site-nav" aria-label="Main">
-        <ul class="nav-list">
-          <li><a href="index.html">Home</a></li>
-          <li><a href="portfolio.html" aria-current="page">Work</a></li>
-          <li><a href="aboutme.html">About</a></li>
-          <li><a href="contact.html">Contact</a></li>
+        <input type="checkbox" class="side-menu" id="side-menu" onclick="togglemenu()"/>
+        <label for="side-menu" class="hamb"><span class="hamb-line"></span></label>
+
+        <ul id="menuList">
+          <li><a href="index.html" class="nav_link">Main Page</a></li>
+          <li><a href="portfolio.html" class="nav_link">Portfolio</a></li>
+          <li><a href="aboutme.html" class="nav_link">About Me</a></li>
+          <li><a href="contact.html" class="nav_link">Contact</a></li>
         </ul>
       </nav>
-    </div>
-  </header>
 
-  <main id="main">
-    <section class="page-head">
-      <div class="container">
-        <p class="eyebrow">Work</p>
-        <h1>Experience</h1>
-        <p class="lede">Where I&rsquo;ve worked and what I got done, from AI implementation to ad operations and client marketing.</p>
-        <div class="btn-row" style="margin-top:2rem">
-          <a class="btn btn-ghost" href="images/JackDanisResume.pdf">Download r&eacute;sum&eacute;</a>
-          <a class="btn btn-ghost" href="https://www.linkedin.com/in/jackdanis/">LinkedIn &nearr;</a>
+    <!--WebPage Content-->
+    <section class="introduction-section">
+    <h1>Work</h1>
+    </section>
+
+    <div class="gallery">
+      <!--GalleryRow1-->
+      <div class="gallery-row">
+        <div class="gallery-item">
+          <img src="./images/WorkTiles/Quad.png" alt="Quad">
+          <p>Quad &middot; AI Admin</p>
+        </div>
+        <div class="gallery-item">
+          <img src="./images/WorkTiles/Vivrato.png" alt="Vivrato">
+          <p>Vivrato &middot; Consultant</p>
+        </div>
+        <div class="gallery-item">
+          <img src="./images/WorkTiles/LaSalleNetwork.png" alt="LaSalle Network">
+          <p>LaSalle Network &middot; Ad Operations</p>
         </div>
       </div>
-    </section>
 
-    <section class="container jobs">
-        <article class="job" id="quad">
-          <div class="job-meta">
-            <h3>Quad</h3>
-            <p>Sussex, WI</p>
-          </div>
-          <div class="job-body">
-            <p class="job-role"><strong>AI Admin &ndash; Strategy, Dev &amp; Implementation</strong><span>Aug 2026 &ndash; Present</span></p>
-            <p class="job-role"><strong>Business Analyst &ndash; Client Technology</strong><span>Jan 2026 &ndash; Aug 2026</span></p>
-            <p class="job-summary">I research, design and deploy AI workflow optimization projects across Quad&rsquo;s internal teams, working with executives and subject-matter experts to build AI solutions for multiple business verticals.</p>
-            <ul class="job-highlights">
-              <li>Owned the development and release of an AI solution that closed a gap in a client&rsquo;s technical workflow.</li>
-              <li>Scoped AI implementation for Quad&rsquo;s MarTech platform, ContentX.</li>
-              <li>Produced product mockups, technical mockups and feasibility studies for emerging Client Tech solutions and future ContentX features.</li>
-              <li>Scoped workflows and outlined new solutions for internal and external client requests.</li>
-            </ul>
-          </div>
-        </article>
-        <article class="job" id="vivrato">
-          <div class="job-meta">
-            <h3>Vivrato</h3>
-            <p>Chicago, IL</p>
-          </div>
-          <div class="job-body">
-            <p class="job-role"><strong>Team Member</strong><span>Oct 2024 &ndash; Present</span></p>
-            <p class="job-summary">Supporting Vivrato&rsquo;s startup phase as a consultant.</p>
-            <ul class="job-highlights">
-              <li>Conduct market research and help set strategic direction.</li>
-              <li>Built the company website.</li>
-              <li>Manage operational tasks essential to launching a new business.</li>
-            </ul>
-          </div>
-        </article>
-        <article class="job" id="resurgens-gaming">
-          <div class="job-meta">
-            <h3>Resurgens Gaming</h3>
-            <p>Chicago, IL</p>
-          </div>
-          <div class="job-body">
-            <p class="job-role"><strong>Partnership Coordinator</strong><span>Jun 2025 &ndash; Oct 2025</span></p>
-          </div>
-        </article>
-        <article class="job" id="lasalle-network">
-          <div class="job-meta">
-            <h3>LaSalle Network</h3>
-            <p>Chicago, IL</p>
-          </div>
-          <div class="job-body">
-            <p class="job-role"><strong>Ad Operations Coordinator</strong><span>Dec 2024 &ndash; May 2025</span></p>
-            <p class="job-summary">Managed every job advert across LinkedIn, Indeed, Dice and other boards, and the relationships between board representatives, internal unit leaders and analytics partners.</p>
-            <ul class="job-highlights">
-              <li>Grew Indeed applicants <strong>64% year over year</strong> by opening new data channels and programs that increased ad exposure at no extra cost.</li>
-              <li>Designed and ran a transition that gave <strong>50+ recruiters</strong> more control over their own ads.</li>
-              <li>Delivered monthly analytics reports and recommendations to key stakeholders.</li>
-              <li>Automated processes to track ad performance and adjust budgets during geographic expansion.</li>
-            </ul>
-          </div>
-        </article>
-        <article class="job" id="volley-solutions">
-          <div class="job-meta">
-            <h3>Volley Solutions</h3>
-            <p>Chicago, IL</p>
-          </div>
-          <div class="job-body">
-            <p class="job-role"><strong>Account Manager</strong><span>Jun 2023 &ndash; Dec 2024</span></p>
-            <p class="job-summary">Created graphics, videos and images for clients across a wide range of industries.</p>
-            <ul class="job-highlights">
-              <li>Built platforms and automated tasks to support data-driven client work, including Google Analytics setup.</li>
-              <li>Coordinated marketing direction with clients in on-site and virtual meetings.</li>
-              <li>Gathered content and refined branding with clients in person to understand their industries first-hand.</li>
-            </ul>
-            <p><a class="text-link" href="portfolio/VolleySolutions.html">See the client videos &rarr;</a></p>
-          </div>
-        </article>
-        <article class="job" id="id-tech-camps">
-          <div class="job-meta">
-            <h3>iD Tech Camps</h3>
-            <p>Lake Forest, IL</p>
-          </div>
-          <div class="job-body">
-            <p class="job-role"><strong>Instructor</strong><span>Jun 2024 &ndash; Aug 2024</span></p>
-            <p class="job-summary">Taught Blender 3D, Python and VR game development on Meta Quest 2 to students interested in STEM.</p>
-          </div>
-        </article>
-    </section>
-
-    <section class="section">
-      <div class="container">
-        <div class="section-head"><h2>Earlier</h2></div>
-        <ul class="earlier-list">
-          <li><strong>IT Partner LLC</strong><span class="earlier-role">Digital Content Creator &middot; 2022</span><span class="earlier-desc">Rewrote website content and scripted and edited two video ads for email marketing.</span></li>
-          <li><strong>Ranch Bucket Brands</strong><span class="earlier-role">Video Editor &middot; 2022</span><span class="earlier-desc">Video editing in Boulder, CO.</span></li>
-          <li><strong>Altvia</strong><span class="earlier-role">Intern &middot; 2021</span><span class="earlier-desc">Rotated through every department, from code review to designing an iOS app UI in Adobe XD; learned Salesforce and SQL.</span></li>
-          <li><strong>Indian Hill Country Club</strong><span class="earlier-role">Caddie &middot; 2015 &ndash; 2019</span><span class="earlier-desc">Four summers in Wilmette, IL.</span></li>
-        </ul>
+      <!--GalleryRow2-->
+      <div class="gallery-row">
+        <div class="gallery-item">
+          <a href="./portfolio/VolleySolutions.html">
+          <img src="./images/PortfolioIcons/VolleySolutions.png" alt="Volley Solutions logo"></a>
+          <p>Volley Solutions &middot; Account Manager</p>
+        </div>
+        <div class="gallery-item">
+          <img src="./images/WorkTiles/ResurgensGaming.png" alt="Resurgens Gaming">
+          <p>Resurgens Gaming &middot; Partnerships</p>
+        </div>
+        <div class="gallery-item">
+          <img src="./images/WorkTiles/iDTech.png" alt="iD Tech">
+          <p>iD Tech Camps &middot; Instructor</p>
+        </div>
       </div>
-    </section>
 
-    <section class="section">
-      <div class="container">
-        <div class="section-head"><h2>Education</h2></div>
-        <ul class="earlier-list">
-          <li><strong>University of Colorado Boulder</strong><span class="earlier-role">Leeds School of Business &middot; 2019 &ndash; 2023</span><span class="earlier-desc">B.S. Business, Marketing; minor in Creative Technology &amp; Design (ATLAS).</span></li>
-        </ul>
-        <p style="margin-top:2.5rem"><a class="text-link" href="side-projects.html">Looking for my design, 3D and coding work? See side projects &rarr;</a></p>
+      <!--GalleryRow3-->
+      <div class="gallery-row">
+        <div class="gallery-item">
+          <a href="./side-projects.html">
+          <img src="./images/WorkTiles/SideProjects.png" alt="Side Projects"></a>
+          <p>Side Projects</p>
+        </div>
       </div>
-    </section>
-  </main>
 
-  <!--Footer-->
-  <footer class="site-footer">
-    <div class="container">
-      <p>&copy; <span data-year>2026</span> Jack Danis</p>
-      <ul class="footer-links">
-        <li><a href="mailto:danisjack0114@gmail.com">Email</a></li>
-        <li><a href="https://www.linkedin.com/in/jackdanis/">LinkedIn</a></li>
-        <li><a href="https://github.com/jackdanis">GitHub</a></li>
-        <li><a href="https://www.instagram.com/jack__danis/">Instagram</a></li>
-      </ul>
     </div>
-    <div class="triangle-strip" aria-hidden="true"></div>
-  </footer>
 
-  <script src="js/site.js"></script>
+    <!--Footer-->
+    <!-- <div class="foot"></div> -->
+      <!--JavaScript-->
+      <script>
+        let menuList = document.getElementById("menuList");
+        menuList.style.maxHeight = "0px";
+        function togglemenu(){
+          if(menuList.style.maxHeight == "0px")
+          {
+            menuList.style.maxHeight = "18rem";
+          }
+          else
+          {
+            menuList.style.maxHeight = "0px";
+          }
+        }
+      </script>
 </body>
 </html>

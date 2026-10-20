@@ -1,77 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lichen Art Project | Jack Danis</title>
-  <meta name="description" content="Lichen Art Project: an installation piece by Jack Danis in collaboration with artist Jenna Hissong.">
-  <link rel="canonical" href="https://jackdanis.github.io/portfolio/InstallationArt.html">
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="Lichen Art Project | Jack Danis">
-  <meta property="og:description" content="Lichen Art Project: an installation piece by Jack Danis in collaboration with artist Jenna Hissong.">
-  <meta property="og:url" content="https://jackdanis.github.io/portfolio/InstallationArt.html">
-  <meta property="og:image" content="https://jackdanis.github.io/images/web/og.jpg">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="theme-color" content="#fbfbf9">
-  <link rel="icon" href="../images/web/favicon.png">
-  <link rel="preload" href="../fonts/chicagoflf-webfont.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="../css/site.css">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Models Page</title>
+    <link rel="stylesheet" href="../style.css">
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
-
-  <!--Header-->
-  <header class="site-header">
-    <div class="container">
-      <a class="logo" href="../index.html" aria-label="Jack Danis, home"><img src="../images/Logo.png" alt="Jack" width="104" height="43"></a>
-      <button class="nav-toggle" aria-label="Menu" aria-expanded="false" aria-controls="site-nav"><span></span></button>
-      <nav class="site-nav" id="site-nav" aria-label="Main">
-        <ul class="nav-list">
-          <li><a href="../index.html">Home</a></li>
-          <li><a href="../portfolio.html" aria-current="page">Work</a></li>
-          <li><a href="../aboutme.html">About</a></li>
-          <li><a href="../contact.html">Contact</a></li>
+    <nav class="nav">
+        <a href='../index.html'><img src='../images/Logo.png' alt='menu' width="200em" /></a>
+  
+        <input type="checkbox" class="side-menu" id="side-menu" onclick="togglemenu()"/>
+        <label for="side-menu" class="hamb"><span class="hamb-line"></span></label>
+  
+        <ul id="menuList">
+          <li><a href="../index.html" class="nav_link">Main Page</a></li>
+          <li><a href="../portfolio.html" class="nav_link">Portfolio</a></li>
+          <li><a href="../aboutme.html" class="nav_link">About Me</a></li>
+          <li><a href="../contact.html" class="nav_link">Contact</a></li>
         </ul>
       </nav>
-    </div>
-  </header>
 
-  <main id="main">
-    <section class="page-head">
-      <div class="container">
-        <a class="back-link" href="../side-projects.html">&larr; Side projects</a>
-        <p class="eyebrow" style="margin-top:2rem">Installation &middot; Video</p>
+
+    <section class="introduction-section">
         <h1>Lichen Art Project</h1>
-        <p class="lede">A collaborative installation piece with artist Jenna Hissong.</p>
-        <dl class="meta">
-          <div><dt>Collaborator</dt><dd>Jenna Hissong</dd></div>
-          <div><dt>Medium</dt><dd>Installation, video</dd></div>
-        </dl>
-      </div>
+        <p>This project was a collaborative effort between myself and artist Jenna Hissong.</p>
+    </section>
+    <section class="location-section">
+      <iframe width="560" height="315" src="https://www.youtube.com/embed/oF4sRu7VOPU?si=B76UQtGREzDiI8ca" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
     </section>
 
-    <section class="project">
-      <div class="container">
-        <div class="video-embed"><iframe src="https://www.youtube-nocookie.com/embed/oF4sRu7VOPU" title="Lichen Art Project" loading="lazy" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>
-      </div>
-    </section>
-
-  </main>
-
-  <!--Footer-->
-  <footer class="site-footer">
-    <div class="container">
-      <p>&copy; <span data-year>2026</span> Jack Danis</p>
-      <ul class="footer-links">
-        <li><a href="mailto:danisjack0114@gmail.com">Email</a></li>
-        <li><a href="https://www.linkedin.com/in/jackdanis/">LinkedIn</a></li>
-        <li><a href="https://github.com/jackdanis">GitHub</a></li>
-        <li><a href="https://www.instagram.com/jack__danis/">Instagram</a></li>
-      </ul>
-    </div>
-    <div class="triangle-strip" aria-hidden="true"></div>
-  </footer>
-
-  <script src="../js/site.js"></script>
+       <!--JavaScript-->
+       <script>
+        let menuList = document.getElementById("menuList");
+        menuList.style.maxHeight = "0px";
+        function togglemenu(){
+          if(menuList.style.maxHeight == "0px")
+          {
+            menuList.style.maxHeight = "18rem";
+          }
+          else
+          {
+            menuList.style.maxHeight = "0px";
+          }
+        }
+      </script>
 </body>
 </html>
