@@ -1,7 +1,7 @@
 @font-face {
   font-family: 'mangat';
-  src: url('../../fonts/mangat.woff') format('woff'),
-      url('../../fonts/mangat.woff2') format('woff2');
+  src: url('../../../../fonts/mangat.woff') format('woff'),
+      url('../../../../fonts/mangat.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
 }
