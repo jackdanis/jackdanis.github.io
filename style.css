@@ -609,3 +609,114 @@ a.resumebtn {
     flex-wrap: wrap;
   }
 }
+
+/*-----BLOCK CONTENTS & CLASSES-----About & Contact (v2)-----*/
+
+.page-v2 {
+  background-color: white;
+  padding-bottom: 4em; /* room for the fixed triangle footer */
+}
+
+.v2-head {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 4rem 3.5rem 2rem;
+}
+.v2-head h1 {
+  font-size: clamp(2.2rem, 6vw, 3.5rem);
+  margin: 0.5rem 0 1.25rem;
+}
+.v2-head p,
+.v2-faq p,
+.v2-contact span {
+  font-family: 'century-gothic';
+  line-height: var(--line-height);
+}
+.v2-head p + p { margin-top: 1rem; }
+
+.v2-eyebrow {
+  font-family: var(--font-family) !important;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #6d6d6a;
+}
+.v2-lede {
+  font-size: 1.25rem;
+  color: #6d6d6a;
+}
+
+.about-intro {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 3.5rem;
+  align-items: start;
+}
+.about-intro img {
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+.v2-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 2.5rem;
+}
+.v2-buttons a.resumebtn { margin-left: 0; }
+
+.v2-faq {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 3.5rem 4rem;
+}
+.v2-faq > h1 {
+  font-size: 2rem;
+  margin: 1em 0;
+  text-align: center;
+}
+.v2-faq > div {
+  max-width: 680px;
+  margin: 0 auto 2rem;
+}
+.v2-faq h2 {
+  font-size: large;
+  margin-bottom: 0.4rem;
+}
+.v2-faq a { font-family: inherit; color: inherit; text-decoration: underline; }
+
+.v2-contact {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 3.5rem 4rem;
+}
+.v2-contact ul {
+  list-style: none;
+  max-width: 720px;
+  border-top: 2px dashed var(--primary-color);
+}
+.v2-contact li { border-bottom: 2px dashed var(--primary-color); }
+.v2-contact a {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 1.4rem 0;
+  font-family: var(--font-family);
+  font-size: clamp(1.2rem, 3vw, 1.6rem);
+  color: var(--primary-color);
+  transition: var(--transition);
+}
+.v2-contact a:hover { padding-left: 0.75rem; color: var(--primary-color); }
+.v2-contact a:hover span { color: var(--primary-color); }
+.v2-contact span {
+  font-size: 0.95rem;
+  color: #6d6d6a;
+  text-align: right;
+}
+
+@media screen and (max-width: 720px) {
+  .v2-head, .v2-faq, .v2-contact { padding-left: 1.5rem; padding-right: 1.5rem; }
+  .about-intro { grid-template-columns: 1fr; gap: 2rem; }
+  .about-intro img { max-width: 320px; }
+}

@@ -1,161 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Graphic Design | Jack Danis</title>
-  <meta name="description" content="Graphic design by Jack Danis: posters, an accordion book, logos, cover art and brand concepts.">
-  <link rel="canonical" href="https://jackdanis.github.io/projects/portfolio/GraphicDesign.html">
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="Graphic Design | Jack Danis">
-  <meta property="og:description" content="Graphic design by Jack Danis: posters, an accordion book, logos, cover art and brand concepts.">
-  <meta property="og:url" content="https://jackdanis.github.io/projects/portfolio/GraphicDesign.html">
-  <meta property="og:image" content="https://jackdanis.github.io/images/web/og.jpg">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="theme-color" content="#fbfbf9">
-  <link rel="icon" href="../../images/web/favicon.png">
-  <link rel="preload" href="../../fonts/chicagoflf-webfont.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="../../css/site.css">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Models Page</title>
+    <link rel="stylesheet" href="../../style.css">
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
-
-  <!--Header-->
-  <header class="site-header">
-    <div class="container">
-      <a class="logo" href="../../index.html" aria-label="Jack Danis, home"><img src="../../images/Logo.png" alt="Jack" width="104" height="43"></a>
-      <button class="nav-toggle" aria-label="Menu" aria-expanded="false" aria-controls="site-nav"><span></span></button>
-      <nav class="site-nav" id="site-nav" aria-label="Main">
-        <ul class="nav-list">
-          <li><a href="../../index.html">Home</a></li>
-          <li><a href="../../portfolio.html" aria-current="page">Work</a></li>
-          <li><a href="../../aboutme.html">About</a></li>
-          <li><a href="../../contact.html">Contact</a></li>
+    <nav class="nav">
+        <a href='../../index.html'><img src='../../images/Logo.png' alt='menu' width="200em" /></a>
+  
+        <input type="checkbox" class="side-menu" id="side-menu" onclick="togglemenu()"/>
+        <label for="side-menu" class="hamb"><span class="hamb-line"></span></label>
+  
+        <ul id="menuList">
+          <li><a href="../../index.html" class="nav_link">Main Page</a></li>
+          <li><a href="../../portfolio.html" class="nav_link">Portfolio</a></li>
+          <li><a href="../../aboutme.html" class="nav_link">About Me</a></li>
+          <li><a href="../../contact.html" class="nav_link">Contact</a></li>
         </ul>
       </nav>
-    </div>
-  </header>
+      
+    <section class="introduction-section">
+        <h1>ATLAS Text</h1>
+        <p>These projects were created during my time at CU Boulder, they provided me with a great deal of experience working under heavy time constraints.</p>
+     
+        <h2>Accordian Book Project</h2>
+        <a href="../../images/Accordion Book.pdf">
+        <img src="../../images/Accordion Book-1.png" alt="Accordian Book Page 1" width="300px" height="170px">
+        </a>
+        <figcaption>This project was made for my ATLAS - Text Class <br> This was an experiment to visually represent text in as an interesting a way as possible.</figcaption>
 
-  <main id="main">
-    <section class="page-head">
-      <div class="container">
-        <a class="back-link" href="../../portfolio.html">&larr; All work</a>
-        <p class="eyebrow" style="margin-top:2rem">Graphic Design</p>
-        <h1>Graphic Design</h1>
-        <p class="lede">Class projects from CU Boulder&rsquo;s ATLAS program, commissions and personal pieces.</p>
-        <dl class="meta">
-          <div><dt>Tools</dt><dd>Adobe Illustrator, Photoshop, InDesign</dd></div>
-          <div><dt>Context</dt><dd>ATLAS Text, CU Boulder; freelance; personal</dd></div>
-        </dl>
-      </div>
-    </section>
-
-    <section class="project">
-      <div class="container">
-        <div class="project-head">
-          <div><p class="eyebrow">ATLAS Text</p><h2>Accordion book</h2></div>
-          <div class="prose">
-              <p>An experiment in visually representing text in as interesting a way as possible. Like the rest of my ATLAS work, it was made under tight time constraints. <a href="../../images/Accordion%20Book.pdf">View the full PDF</a>.</p>
+        <h2>Mile High Horror Project</h2>
+        <a href="../../images/GraphicDesigns/Mile High Horror Film Festival - Littleton, CO.pdf">
+          <img src="../../images/GraphicDesigns/MileHighPNG.png" alt="Mile High Film Festival Promo" width="300px" height="430px">
+        </a>
+        <figcaption>This project was a lot of fun! I went for a minimalist approach but I feel like it would be eye-catching when viewed from afar and properly attracts horror fans.</figcaption>
+        
+        <h1>Hobby Projects</h1>
+        <div class="portfolio-gallery">
+          <!--GalleyRow1-->
+          <div class="portfolio-gallery-row">
+            <div class="portfolio-gallery-item">
+              <img src="../../images/GraphicDesigns/ScanSummer.png">
+              <figcaption>This was for an old clothing line a friend started, never used.</figcaption>
+            </div>
+            <div class="portfolio-gallery-item">
+              <img src="../../images/GraphicDesigns/DissonanceCover.png">
+              <figcaption>This was made in response to the existence of Mark Zuckerberg.</figcaption>
+            </div>
+            <div class="portfolio-gallery-item">
+              <img src="../../images/GraphicDesigns/ProtestArt.png">
+              <figcaption>For Fun!</figcaption>
+            </div>
+            <div class="portfolio-gallery-item">
+              <img src="../../images/GraphicDesigns/Hackthrough.png">
+              <figcaption>Made for a Youtube Series</figcaption>
+            </div>
+            <div class="portfolio-gallery-item">
+              <img src="../../images/GraphicDesigns/Mind in the Program-Alt.png">
+              <figcaption>'Mind in the Program'</figcaption>
+            </div>
+          </div>
+          <div class="portfolio-gallery-row">
+            <div class="portfolio-gallery-item">
+              <img src="../../images/GraphicDesigns/WindowsXP Border.png">
+              <figcaption>Imaginary Computer OS Designs [Done in Illustrator]</figcaption>
+            </div>
+          </div>
+          <div class="portfolio-gallery-row">
+            <div class="portfolio-gallery-item">
+              <img src="../../images/GraphicDesigns/LoklandLogo.png">
+              <figcaption>Commisioned for a YouTuber</figcaption>
+            </div>
+          </div>
+          <div class="portfolio-gallery-row">
+            <div class="portfolio-gallery-item">
+              <img src="../../images/GraphicDesigns/GrassRoutes66.png">
+              <figcaption>Array of designs created for a startup non-profit association, based in Boulder, that ultimately decided against undertaking such a large project.</figcaption>
+            </div>
           </div>
         </div>
-        <div class="media-grid cols-1">
-            <figure class="framed">
-              <img src="../../images/web/Accordion-Book-1.webp" alt="First spread of the accordion book" width="1600" height="1035" loading="lazy">
-            </figure>
-        </div>
-      </div>
+    
     </section>
 
-    <section class="project">
-      <div class="container">
-        <div class="project-head">
-          <div><p class="eyebrow">ATLAS Text</p><h2>Mile High Horror Film Festival</h2></div>
-          <div class="prose">
-              <p>A poster for a horror film festival in Littleton, CO. I went for a minimalist approach that still catches the eye from a distance and speaks to horror fans. <a href="../../images/GraphicDesigns/Mile%20High%20Horror%20Film%20Festival%20-%20Littleton,%20CO.pdf">View the PDF</a>.</p>
-          </div>
-        </div>
-        <div class="media-grid cols-2">
-            <figure>
-              <img src="../../images/web/MileHighPNG.webp" alt="Mile High Horror Film Festival poster" width="1200" height="1855" loading="lazy">
-            </figure>
-        </div>
-      </div>
-    </section>
+    
 
-    <section class="project">
-      <div class="container">
-        <div class="project-head">
-          <div><p class="eyebrow">Commissions</p><h2>Logos &amp; brand concepts</h2></div>
-          <div class="prose">
-              <p>Work for YouTubers and a Boulder-based nonprofit startup.</p>
-          </div>
-        </div>
-        <div class="media-grid cols-2">
-            <figure>
-              <img src="../../images/web/LoklandLogo.webp" alt="Lokland logo" width="1400" height="788" loading="lazy">
-              <figcaption>Logo commissioned for a YouTuber</figcaption>
-            </figure>
-            <figure>
-              <img src="../../images/web/Hackthrough.webp" alt="Hackthrough title art" width="1400" height="788" loading="lazy">
-              <figcaption>Made for a YouTube series</figcaption>
-            </figure>
-            <figure>
-              <img src="../../images/web/GrassRoutes66.webp" alt="Grass Routes 66 brand designs" width="1400" height="1421" loading="lazy">
-              <figcaption>Designs for a Boulder nonprofit startup that ultimately decided against such a large project</figcaption>
-            </figure>
-            <figure>
-              <img src="../../images/web/ScanSummer.webp" alt="Scan Summer clothing graphic" width="1000" height="1000" loading="lazy">
-              <figcaption>For a friend&rsquo;s clothing line (unused)</figcaption>
-            </figure>
-        </div>
-      </div>
-    </section>
 
-    <section class="project">
-      <div class="container">
-        <div class="project-head">
-          <div><p class="eyebrow">Personal</p><h2>Hobby pieces</h2></div>
-          <div class="prose">
-              <p>Illustration and cover art made for fun.</p>
-          </div>
-        </div>
-        <div class="media-grid cols-2">
-            <figure>
-              <img src="../../images/web/WindowsXP-Border.webp" alt="Imaginary operating system interface designs" width="1800" height="1012" loading="lazy">
-              <figcaption>Imaginary computer OS designs, made in Illustrator</figcaption>
-            </figure>
-            <figure>
-              <img src="../../images/GraphicDesigns/Mind in the Program-Alt.png" alt="Mind in the Program artwork" width="960" height="600" loading="lazy">
-              <figcaption>&lsquo;Mind in the Program&rsquo;</figcaption>
-            </figure>
-            <figure>
-              <img src="../../images/web/DissonanceCover.webp" alt="Dissonance cover art" width="1000" height="1000" loading="lazy">
-              <figcaption>Made in response to the existence of Mark Zuckerberg</figcaption>
-            </figure>
-            <figure>
-              <img src="../../images/web/ProtestArt.webp" alt="Protest art poster" width="750" height="1139" loading="lazy">
-              <figcaption>For fun</figcaption>
-            </figure>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <!--Footer-->
-  <footer class="site-footer">
-    <div class="container">
-      <p>&copy; <span data-year>2026</span> Jack Danis</p>
-      <ul class="footer-links">
-        <li><a href="mailto:danisjack0114@gmail.com">Email</a></li>
-        <li><a href="https://www.linkedin.com/in/jackdanis/">LinkedIn</a></li>
-        <li><a href="https://github.com/jackdanis">GitHub</a></li>
-        <li><a href="https://www.instagram.com/jack__danis/">Instagram</a></li>
-      </ul>
-    </div>
-    <div class="triangle-strip" aria-hidden="true"></div>
-  </footer>
-
-  <script src="../../js/site.js"></script>
+       <!--JavaScript-->
+       <script>
+        let menuList = document.getElementById("menuList");
+        menuList.style.maxHeight = "0px";
+        function togglemenu(){
+          if(menuList.style.maxHeight == "0px")
+          {
+            menuList.style.maxHeight = "18rem";
+          }
+          else
+          {
+            menuList.style.maxHeight = "0px";
+          }
+        }
+      </script>
 </body>
 </html>

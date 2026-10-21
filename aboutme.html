@@ -1,64 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>About | Jack Danis</title>
-  <meta name="description" content="About Jack Danis: CU Boulder marketing graduate with a minor in Creative Technology and Design, based in Chicago.">
-  <link rel="canonical" href="https://jackdanis.github.io/aboutme.html">
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="About | Jack Danis">
-  <meta property="og:description" content="About Jack Danis: CU Boulder marketing graduate with a minor in Creative Technology and Design, based in Chicago.">
-  <meta property="og:url" content="https://jackdanis.github.io/aboutme.html">
-  <meta property="og:image" content="https://jackdanis.github.io/images/web/og.jpg">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="theme-color" content="#fbfbf9">
-  <link rel="icon" href="images/web/favicon.png">
-  <link rel="preload" href="fonts/chicagoflf-webfont.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/site.css">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About | Jack Danis</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <a class="skip-link" href="#main">Skip to content</a>
+<body class="page-v2">
+   
+    <!--Navigation Menu-->
+    <nav class="nav">
+      <a href='index.html'><img src='images/Logo.png' alt='menu' width="200em" /></a>
 
-  <!--Header-->
-  <header class="site-header">
-    <div class="container">
-      <a class="logo" href="index.html" aria-label="Jack Danis, home"><img src="images/Logo.png" alt="Jack" width="104" height="43"></a>
-      <button class="nav-toggle" aria-label="Menu" aria-expanded="false" aria-controls="site-nav"><span></span></button>
-      <nav class="site-nav" id="site-nav" aria-label="Main">
-        <ul class="nav-list">
-          <li><a href="index.html">Home</a></li>
-          <li><a href="portfolio.html">Work</a></li>
-          <li><a href="aboutme.html" aria-current="page">About</a></li>
-          <li><a href="contact.html">Contact</a></li>
-        </ul>
-      </nav>
-    </div>
-  </header>
+      <input type="checkbox" class="side-menu" id="side-menu" onclick="togglemenu()"/>
+      <label for="side-menu" class="hamb"><span class="hamb-line"></span></label>
 
-  <main id="main">
-    <section class="page-head">
-      <div class="container about-grid">
-        <img src="images/web/LinkedInHeadshot.webp" alt="Portrait of Jack Danis" width="900" height="1349">
-        <div>
-          <p class="eyebrow">About</p>
-          <h1>Hi! I&rsquo;m Jack.</h1>
-          <div class="prose">
-            <p>I&rsquo;m a graduate of CU Boulder, where I majored in Business&nbsp;Marketing with a minor in Creative Technology and Design.</p>
-            <p>That means I know the ins and outs of running an efficient system, with the added ability to create some seriously enticing multimedia content too. I&rsquo;ve worked as a graphic designer, video editor, consultant, data analyst and a caddie.</p>
-          </div>
-          <div class="btn-row" style="margin-top:2rem">
-            <a class="btn btn-primary" href="images/JackDanisResume.pdf">Download r&eacute;sum&eacute;</a>
-            <a class="btn btn-ghost" href="contact.html">Get in touch</a>
-          </div>
+      <ul id="menuList">
+        <li><a href="index.html" class="nav_link">Main Page</a></li>
+        <li><a href="portfolio.html" class="nav_link">Portfolio</a></li>
+        <li><a href="aboutme.html" class="nav_link">About Me</a></li>
+        <li><a href="contact.html" class="nav_link">Contact</a></li>
+      </ul>
+    </nav>
+    <!--Webpage Content-->
+    <section class="v2-head about-intro">
+      <img src="images/LinkedInHeadshot-web.jpg" alt="Portrait of Jack Danis" width="900" height="1349">
+      <div>
+        <p class="v2-eyebrow">About</p>
+        <h1>Hi! I&rsquo;m Jack.</h1>
+        <p>I&rsquo;m an AI Admin at Quad, where I research, design and roll out AI workflow projects across internal teams. I studied Business Marketing at CU Boulder with a minor in Creative Technology and Design.</p>
+        <p>That mix means I&rsquo;m comfortable on the business side and in the creative and technical work that produces long-term results. If there&rsquo;s data behind a business decision, I&rsquo;m the one picking it apart. I&rsquo;ve worked with Adobe Creative Cloud, Figma, Autodesk Fusion, Blender, HTML/CSS/JS, Google Analytics, Marketo and Salesforce.</p>
+        <div class="v2-buttons">
+          <a class="resumebtn" href="./images/JackDanisResume2025.pdf">DOWNLOAD RESUME</a>
+          <a class="resumebtn" href="contact.html">GET IN TOUCH</a>
         </div>
       </div>
     </section>
 
-    <section class="section">
-      <div class="container">
-        <div class="section-head"><h2>Where I&rsquo;m from</h2></div>
-        <pre class="ascii" aria-label="ASCII art of the Chicago skyline">                                                                                          
+    <hr>
+
+    <section class="location-section">
+      <h1>Where I&rsquo;m From</h1>
+      <pre>                                                                                          
                                                                                           
              --                                                                           
              ==                                                                           
@@ -89,49 +73,52 @@
 ██║░░██╗██╔══██║██║██║░░██╗██╔══██║██║░░╚██╗██║░░██║
 ╚█████╔╝██║░░██║██║╚█████╔╝██║░░██║╚██████╔╝╚█████╔╝
 ░╚════╝░╚═╝░░╚═╝╚═╝░╚════╝░╚═╝░░╚═╝░╚═════╝░░╚════╝░
- </pre>
+ 
+
+
+
+</pre>
+    </section>
+
+    <hr>
+
+    <section class="v2-faq">
+      <h1>More About Me</h1>
+      <div>
+        <h2>This website is pretty cool. How did you make it?</h2>
+        <p>I coded it myself, every little bit! From the navigation menu to the responsive layout, the illustrations and each portfolio page. No Squarespace, GoDaddy or WordPress here.</p>
+      </div>
+      <div>
+        <h2>What are your favorite hobbies?</h2>
+        <p>Biking, hiking, video games, history and politics. I&rsquo;m also a strong advocate for disability rights.</p>
+      </div>
+      <div>
+        <h2>Where do you live?</h2>
+        <p>Chicago, IL for the time being, but I spend a lot of time in Colorado too.</p>
+      </div>
+      <div>
+        <h2>What kind of work have you done?</h2>
+        <p>A bit of everything: AI strategy, business analysis, ad operations, account management, startup consulting, teaching 3D and game development, and video editing. See my <a href="portfolio.html">portfolio</a> for the full list.</p>
       </div>
     </section>
 
-    <section class="section">
-      <div class="container">
-        <div class="section-head"><h2>More about me</h2></div>
-        <div class="faq">
-          <div>
-            <h3>This website is pretty cool. How did you make it?</h3>
-            <p>I coded it myself, every little bit! From the navigation menu to the responsive layout, the illustrations and each portfolio page. No Squarespace, GoDaddy or WordPress here.</p>
-          </div>
-          <div>
-            <h3>What are your favorite hobbies?</h3>
-            <p>Biking, hiking and playing video games. I&rsquo;m currently reading <em>Tomorrow, and Tomorrow, and Tomorrow</em>, and I&rsquo;m always watching new stand-up.</p>
-          </div>
-          <div>
-            <h3>Where do you live?</h3>
-            <p>Chicago, IL for the time being, but I spend a lot of time in Colorado too.</p>
-          </div>
-          <div>
-            <h3>What kind of work have you done?</h3>
-            <p>A bit of everything. While I studied marketing, I&rsquo;ve worked as a graphic designer, video editor, consultant, data analyst and a caddie. I especially enjoy the creative side of things, but my programming experience comes in handy too.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!--Footer-->
-  <footer class="site-footer">
-    <div class="container">
-      <p>&copy; <span data-year>2026</span> Jack Danis</p>
-      <ul class="footer-links">
-        <li><a href="mailto:danisjack0114@gmail.com">Email</a></li>
-        <li><a href="https://www.linkedin.com/in/jackdanis/">LinkedIn</a></li>
-        <li><a href="https://github.com/jackdanis">GitHub</a></li>
-        <li><a href="https://www.instagram.com/jack__danis/">Instagram</a></li>
-      </ul>
-    </div>
-    <div class="triangle-strip" aria-hidden="true"></div>
-  </footer>
-
-  <script src="js/site.js"></script>
+    <!--Footer-->
+    <div class="foot"></div>
+    
+      <!--JavaScript-->
+      <script>
+        let menuList = document.getElementById("menuList");
+        menuList.style.maxHeight = "0px";
+        function togglemenu(){
+          if(menuList.style.maxHeight == "0px")
+          {
+            menuList.style.maxHeight = "18rem";
+          }
+          else
+          {
+            menuList.style.maxHeight = "0px";
+          }
+        }
+      </script>
 </body>
 </html>
