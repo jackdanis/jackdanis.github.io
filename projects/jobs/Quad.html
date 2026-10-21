@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quad | Jack Danis</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+<body style="background-color: white; background-size: cover; background-position: center center">
+      <header class="site-header">
+    <div class="site-header-inner">
+      <a class="logo" href="../../index.html" aria-label="Jack Danis, home"><img src="../../images/Logo.png" alt="Jack" width="104" height="43"></a>
+      <button class="nav-toggle" aria-label="Menu" aria-expanded="false" aria-controls="site-nav"><span></span></button>
+      <nav class="site-nav" id="site-nav" aria-label="Main">
+        <ul class="nav-list">
+          <li><a href="../../index.html">Home</a></li>
+          <li><a href="../../portfolio.html" aria-current="page">Work</a></li>
+          <li><a href="../../aboutme.html">About</a></li>
+          <li><a href="../../contact.html">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+    <!--WebPage Content-->
+    <main class="job">
+      <h1 class="job-tab">Quad</h1>
+      <div class="job-sheet">
+      <div>
+        <ul class="job-roles">
+          <li><span>AI Admin, Strategy, Dev &amp; Implementation</span><span class="job-date">Aug 2026 – now</span></li>
+          <li><span>Business Analyst, Client Technology</span><span class="job-date">Jan – Aug 2026</span></li>
+        </ul>
+        <p class="job-place">Sussex, Wisconsin</p>
+        <p class="job-copy">Researches, designs and deploys AI workflow projects across every internal team, working with team executives and subject experts to build AI solutions for multiple business verticals.</p>
+        <p class="job-copy">As Business Analyst: scoped workflows for internal and external clients, outlined AI considerations for the ContentX MarTech platform, built product and technical mockups and feasibility studies, and owned the release of an AI solution that closed a gap in a client&#8217;s workflow.</p>
+      </div>
+      <div class="job-empty">Projects to add</div>
+      </div>
+    </main>
+
+    <!--Footer-->
+    <!-- <div class="foot"></div> -->
+      <!--JavaScript-->
+      <script>
+    (function () {
+      var header = document.querySelector('.site-header');
+      var toggle = header.querySelector('.nav-toggle');
+      toggle.addEventListener('click', function () {
+        toggle.setAttribute('aria-expanded', header.classList.toggle('nav-open'));
+      });
+    })();
+  </script>
+</body>
+</html>
