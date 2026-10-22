@@ -272,6 +272,64 @@ function solidTop(x, z, out) {
   }
   return out;
 }
+// ---------- Kickers (Jack picked these 2026-10-22) ----------
+// Terrain-park kickers in three sizes, after the Wii Fit ski jump: groomed snow curving up to a lip with red and
+// white mats across it. They stand where the 25/26 trail map paints Snowmass's freestyle terrain: the orange
+// strip down Cabin, beside Coney Express, sized by the map's own labels (M/L up top, S/M at the bottom).
+// The kicker is part of the snow, so Momentum launches Goldie off the lip at whatever speed she brings.
+// Profile in the kicker's own frame: u down the fall line from its foot, w up; v across, sides at 45 degrees.
+const KICK_SIZES = {
+  small: { h: 1.0, a: 22, w: 4 },                              // about 11 m of air at 25 mph
+  medium: { h: 2.0, a: 27, w: 6 },                             // about 14 m
+  large: { h: 3.5, a: 32, w: 8, table: 8, land: 20 },          // a table and a built landing: clears it from about 31 mph
+};
+const KICK_AT = [                                              // meters down Cabin's line from its top
+  { run: 'Cabin', d: 330, size: 'medium' },
+  { run: 'Cabin', d: 720, size: 'large' },
+  { run: 'Cabin', d: 1290, size: 'small' },
+];
+const KICK_LIP = 1.2;                                          // m of red and white mat up to the lip
+const KICKERS = [];
+{
+  const kB = { h: 0, gx: 0, gz: 0 };
+  for (const at of KICK_AT) {
+    const run = (MAP.runs || []).find((r) => r.name === at.run);
+    if (!run) continue;
+    let left = at.d, x = run.points[0][0], z = run.points[0][1];
+    for (let i = 0; i < run.points.length - 1 && left > 0; i++) {
+      const [ax, az] = run.points[i], [bx, bz] = run.points[i + 1], L = Math.hypot(bx - ax, bz - az), f = Math.min(1, left / L);
+      x = ax + (bx - ax) * f; z = az + (bz - az) * f; left -= L;
+    }
+    // the fall line, averaged over 20 m so a bump doesn't swing it
+    let gx = 0, gz = 0;
+    for (let a = -10; a <= 10; a += 5) for (let b = -10; b <= 10; b += 5) { sampleBase(x + a, z + b, kB); gx += kB.gx; gz += kB.gz; }
+    const g = Math.hypot(gx, gz) || 1, S = KICK_SIZES[at.size], A = S.a * Math.PI / 180;
+    const R = S.h / (1 - Math.cos(A)), L = R * Math.sin(A);
+    const back = S.table ? Math.tan(S.land * Math.PI / 180) : Math.tan(50 * Math.PI / 180);
+    const top = L + (S.table || 0), end = top + S.h / back;
+    const prof = (u) => u <= 0 ? 0 : u <= L ? R - Math.sqrt(R * R - u * u) : u <= top ? S.h : Math.max(0, S.h - (u - top) * back);
+    const k = { x, z, fx: -gx / g, fz: -gz / g, hw: S.w / 2, h: S.h, L, end, prof, size: at.size, mode: -1, mesh: null };
+    const r = Math.hypot(end, k.hw + S.h);
+    Object.assign(k, { bx0: x - r, bx1: x + r, bz0: z - r, bz1: z + r });
+    KICKERS.push(k);
+  }
+}
+// how high a kicker lifts the snow at (x, z)
+function kickH(k, x, z) {
+  const dx = x - k.x, dz = z - k.z, u = dx * k.fx + dz * k.fz;
+  if (u <= 0 || u >= k.end) return 0;
+  const v = Math.abs(dz * k.fx - dx * k.fz);
+  return Math.max(0, k.prof(u) - Math.max(0, v - k.hw));
+}
+function addKick(x, z, out) {
+  for (const k of KICKERS) {
+    if (x < k.bx0 || x > k.bx1 || z < k.bz0 || z > k.bz1) continue;
+    const h = kickH(k, x, z), E = 0.05;
+    if (h <= 0 && kickH(k, x + E, z) <= 0 && kickH(k, x, z + E) <= 0) continue;
+    out.h += h; out.gx += (kickH(k, x + E, z) - h) / E; out.gz += (kickH(k, x, z + E) - h) / E;
+  }
+  return out;
+}
 function sample(x, z, out = samp) {
   const st = STATIONS.length ? stationAt(x, z) : null;
   if (!st) sampleBase(x, z, out);
@@ -279,6 +337,7 @@ function sample(x, z, out = samp) {
     const h = stationH(st, x, z), E = 0.3;
     out.h = h; out.gx = (stationH(st, x + E, z) - h) / E; out.gz = (stationH(st, x, z + E) - h) / E;
   }
+  if (KICKERS.length) addKick(x, z, out);
   return solidY !== null && SOLIDS.length ? solidTop(x, z, out) : out;
 }
 const groundY = (x, z) => sample(x, z, { h: 0, gx: 0, gz: 0 }).h;
@@ -366,7 +425,7 @@ async function loadTex(name, { pixel = true, repeat = false, mips = false } = {}
 const [cordT, cordN, powT, powN, skyT, goldieT, goldieN, ...skyRest] = await Promise.all([
   loadTex('corduroy', { repeat: true, mips: true }), loadTex('corduroy_n', { repeat: true, mips: true }),
   loadTex('powder', { repeat: true, mips: true }), loadTex('powder_n', { repeat: true, mips: true }),
-  loadTex('sky_noon', { pixel: false }), loadTex('goldie'), loadTex('goldie_n'),
+  loadTex('sky_noon', { pixel: false }), loadTex('goldie8'), loadTex('goldie8_n'),
   loadTex('sky_golden', { pixel: false }), loadTex('sky_night', { pixel: false }), loadTex('sky_storm', { pixel: false }),
 ]);
 const SKIES = { noon: skyT, golden: skyRest[0], night: skyRest[1], storm: skyRest[2] };
@@ -1544,7 +1603,7 @@ for (const lift of LIFTS) {
   const s = [0];
   for (let k = 1; k < path.length; k++) s.push(s[k - 1] + Math.hypot(path[k][0] - path[k - 1][0], path[k][2] - path[k - 1][2]));
   const L = s[s.length - 1];
-  const lp = { path, s, L, arm: st.arm, speed: st.speed };
+  const lp = { path, s, L, arm: st.arm, speed: st.speed, shift: 0, name: lift.name, kind: lift.kind, pts, g, stn };
   liftPaths.push(lp);
   for (let k = 0; k < path.length - 1; k++) {
     const dx = path[k + 1][0] - path[k][0], dz = path[k + 1][2] - path[k][2], d = Math.hypot(dx, dz) || 1;
@@ -1579,6 +1638,91 @@ if (apronGeos.length) {
     defines: { PATCH: 1 }, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4,
   });
   scene.add(new THREE.Mesh(geo, mat));
+}
+// the kickers: groomed snow drawn like the ground, a hair in front of it, and the lip mats. Each is rebuilt when the
+// snow under it changes (the 2 m run tiles load in or drop out) so it always sits on the ground the skier rides.
+const kickSnowMat = new THREE.ShaderMaterial({
+  uniforms: Object.assign({}, terrainMat.uniforms, { uPFar: { value: 1e9 } }), vertexShader: terrainMat.vertexShader, fragmentShader: terrainMat.fragmentShader,
+  defines: { PATCH: 1 }, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4,
+});
+// the mats are drawn like the lift models, pulled in front of the kicker's snow they lie on
+const kickMatMat = modelMat.clone();
+Object.assign(kickMatMat, { uniforms: modelMat.uniforms, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -8 });
+const KICK_RED = [0.78, 0.12, 0.1], KICK_WHITE = [0.95, 0.96, 1.0];
+function buildKicker(k) {
+  const kB = { h: 0, gx: 0, gz: 0 }, step = 0.5, side = k.hw + k.h + step, y0 = sampleBase(k.x, k.z, kB).h;
+  const toW = (u, v) => [k.x + k.fx * u - k.fz * v, k.z + k.fz * u + k.fx * v];
+  const ground = (u, v) => { const [x, z] = toW(u, v); return [x, sampleBase(x, z, kB).h, z]; };
+  // the snow: a grid over the kicker's footprint, cells the kicker doesn't lift left out
+  const pos = [], us = [], vs = [];
+  for (let u = 0; u < k.end + step; u += step) us.push(Math.min(u, k.end));
+  for (let v = -side; v <= side + 1e-6; v += step) vs.push(v);
+  const grid = vs.map((v) => us.map((u) => {
+    const [x, y, z] = ground(u, v), lift = kickH(k, x, z);
+    return [x - k.x, y + lift + 0.03 - y0, z - k.z, lift];
+  }));
+  const tri = (a, b, c) => {
+    // wound to face up
+    const ux = b[0] - a[0], uz = b[2] - a[2], wx = c[0] - a[0], wz = c[2] - a[2];
+    if (uz * wx - ux * wz < 0) pos.push(...a.slice(0, 3), ...c.slice(0, 3), ...b.slice(0, 3));
+    else pos.push(...a.slice(0, 3), ...b.slice(0, 3), ...c.slice(0, 3));
+  };
+  for (let b = 0; b < vs.length - 1; b++) for (let a = 0; a < us.length - 1; a++) {
+    const p = grid[b][a], q = grid[b][a + 1], r = grid[b + 1][a + 1], t = grid[b + 1][a];
+    if (p[3] <= 0 && q[3] <= 0 && r[3] <= 0 && t[3] <= 0) continue;
+    tri(p, q, r); tri(p, r, t);
+  }
+  const n = pos.length / 3, cov = new Float32Array(n * 4);
+  for (let i = 0; i < n; i++) cov[i * 4] = -5;
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('aCov', new THREE.BufferAttribute(cov, 4));
+  geo.setAttribute('aN', new THREE.BufferAttribute(new Float32Array(n * 3), 3));
+  const group = new THREE.Group();
+  group.add(new THREE.Mesh(geo, kickSnowMat));
+  // the lip mats: red panels across the last KICK_LIP m, each with a white chevron pointing down the hill
+  const mats = [], panels = Math.max(2, Math.round(k.hw * 2 / 1.4)), pw = k.hw * 2 / panels, u0 = k.L - KICK_LIP;
+  const at = (u, v, lift) => { const [x, y, z] = ground(u, v); return [x - k.x, y + k.prof(u) + lift - y0, z - k.z]; };
+  const poly = (pts, col) => {
+    const P = [];
+    for (let i = 1; i < pts.length - 1; i++) {
+      const a = pts[0], b = pts[i], c = pts[i + 1];
+      const ux = b[0] - a[0], uz = b[2] - a[2], wx = c[0] - a[0], wz = c[2] - a[2];
+      P.push(...a, ...(uz * wx - ux * wz < 0 ? [...c, ...b] : [...b, ...c]));
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3));
+    mats.push(part(g, col));
+  };
+  for (let i = 0; i < panels; i++) {
+    const va = -k.hw + i * pw + pw * 0.04, vb = -k.hw + (i + 1) * pw - pw * 0.04, vm = (va + vb) / 2, q = (vb - va) * 0.42;
+    const U = (f) => u0 + KICK_LIP * f;
+    // the red panel, in strips so it follows the curve of the face
+    for (let s = 0; s < 4; s++) poly([at(U(s / 4), va, 0.06), at(U((s + 1) / 4), va, 0.06), at(U((s + 1) / 4), vb, 0.06), at(U(s / 4), vb, 0.06)], KICK_RED);
+    // the chevron's two arms
+    for (const sgn of [-1, 1]) poly([at(U(0.35), vm + sgn * q, 0.09), at(U(0.95), vm, 0.09), at(U(0.65), vm, 0.09), at(U(0.05), vm + sgn * q, 0.09)], KICK_WHITE);
+  }
+  group.add(new THREE.Mesh(merge(mats), kickMatMat));
+  group.position.set(k.x, y0, k.z);
+  return group;
+}
+// the snow under a kicker: 1 where the 2 m run tiles cover it all, 0 on the 10 m ground
+function kickGround(k) {
+  if (!PATCH || !patchOn) return 0;
+  const t = { h: 0, gx: 0, gz: 0 }, s = k.hw + k.h;
+  for (const [u, v] of [[0, -s], [0, s], [k.end, -s], [k.end, s], [k.end / 2, 0]]) {
+    if (!samplePatch(PATCH, k.x + k.fx * u - k.fz * v, k.z + k.fz * u + k.fx * v, t)) return 0;
+  }
+  return 1;
+}
+function updateKickers() {
+  for (const k of KICKERS) {
+    const mode = kickGround(k);
+    if (mode === k.mode) continue;
+    if (k.mesh) { scene.remove(k.mesh); k.mesh.traverse((o) => { if (o.geometry) o.geometry.dispose(); }); }
+    k.mesh = buildKicker(k); k.mode = mode;
+    scene.add(k.mesh);
+  }
 }
 // ---------- Run art pass: trail signs, rope lines and a fence on the real runs ----------
 // Every named run gets a trail sign where it begins. Sunnyside and Max Park, which start together at the top of
@@ -2132,6 +2276,67 @@ function besideTerminal(end, prev, label) {
   if (pick) STARTS.push({ label, x: pick.x, z: pick.z, heading: Math.atan2(-pick.f.gx, pick.f.gz) });
 }
 
+// ---------- The lift ride (Jack 2026-10-22) ----------
+// A ring of light on every chairlift's loading deck. Ski into it: fade to black, ride a chair up at the lift's
+// real speed, fade to black, and stand on the top deck where the chair lets you off. A tap or Space skips to
+// that last fade. Each lift's top start in the Tab menu is that same spot.
+const RING_R = 2.5, LOAD = 4.5;      // m across the ring's middle / 2; m from the wheel to load and unload
+const RIDES = [];
+for (const lp of liftPaths) {
+  if (lp.kind !== 'chair_lift') continue;
+  const N = lp.pts.length, b = lp.g[0] <= lp.g[N - 1] ? 0 : N - 1, t = N - 1 - b;
+  const sb = lp.stn[b], st = lp.stn[t];
+  if (!sb || !st) continue;
+  // uphill along the line at each end; loaded chairs ride on the right of it, looking up
+  const along = (i, j) => { const dx = lp.pts[j][0] - lp.pts[i][0], dz = lp.pts[j][1] - lp.pts[i][1], l = Math.hypot(dx, dz) || 1; return [dx / l, dz / l]; };
+  const [bx, bz] = along(b, b ? b - 1 : 1), [tx, tz] = along(t ? t - 1 : 1, t);
+  const ring = { x: sb.x + bx * LOAD + bz * lp.arm, z: sb.z + bz * LOAD - bx * lp.arm, y: sb.y };
+  const top = { x: st.x - tx * LOAD + tz * lp.arm, z: st.z - tz * LOAD - tx * lp.arm };
+  // off the chair she faces the way down the run the old top start faced from (a little way down it)
+  const old = STARTS.find((q) => q.label === `Start: ${lp.name} top`);
+  top.heading = old ? Math.atan2(old.x - top.x, -(old.z - top.z)) : Math.atan2(tx, -tz);
+  if (old) Object.assign(old, top);
+  // the ride in carrier distance (see carrierAt): from the loading spot to the unloading spot
+  const d0 = (b ? lp.L : 0) + LOAD, d1 = (b ? lp.L : 0) + lp.L - LOAD;
+  RIDES.push({ lp, ring, top, d0, d1, chair: carriers.chair.find((c) => c.lp === lp) });
+}
+// the ring: wisps of green light winding round a soft cyan glow, lying on the deck (Jack's reference image)
+const ringMat = new THREE.ShaderMaterial({
+  uniforms: { time: { value: 0 } },
+  transparent: true, depthWrite: false,
+  vertexShader: `
+    varying vec2 vP;
+    void main() { vP = (uv - 0.5) * ${((RING_R + 0.8) * 2).toFixed(1)}; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+  fragmentShader: `
+    uniform float time;
+    varying vec2 vP;
+    void main() {
+      float r = length(vP), a = atan(vP.y, vP.x), R = ${RING_R.toFixed(1)};
+      // the soft cyan band, in patches that drift round
+      float glow = exp(-pow((r - R) / 0.42, 2.0)) * (0.6 + 0.4 * sin(a * 3.0 + time * 0.7) * sin(a * 5.0 - time * 0.4));
+      // green strands twisting round each other across it
+      float w = 0.0;
+      for (int k = 0; k < 9; k++) {
+        float fk = float(k);
+        float off = R + 0.26 * sin(a * (2.0 + fk) + time * (0.5 + 0.2 * fk) + fk * 1.7) + 0.08 * sin(a * (7.0 + 2.0 * fk) - time * 1.3);
+        w += exp(-pow((r - off) / 0.05, 2.0)) * (0.55 + 0.45 * sin(a * (4.0 + fk) - time * (1.0 + 0.3 * fk)));
+      }
+      w = min(w, 1.0);
+      vec3 col = mix(vec3(0.0, 0.78, 0.92), vec3(0.15, 0.95, 0.3), w);
+      col = mix(col, vec3(0.8, 1.0, 0.8), w * w * 0.5);
+      float alpha = clamp(glow * 0.85 + w, 0.0, 1.0);
+      if (alpha < 0.01) discard;
+      gl_FragColor = vec4(col, alpha);
+    }`,
+});
+for (const R of RIDES) {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry((RING_R + 0.8) * 2, (RING_R + 0.8) * 2).rotateX(-Math.PI / 2), ringMat);
+  m.position.set(R.ring.x, R.ring.y + 0.12, R.ring.z);
+  m.renderOrder = 2;
+  scene.add(m);
+}
+const ride = { lp: null, chair: null, d: 0, t: 0, R: null };
+
 // Physics lab: start on Powderhorn, the long test run.
 {
   const geo = new THREE.BufferGeometry();
@@ -2253,18 +2458,29 @@ function pathAt(lp, d, out) {
   out.dx = b[0] - a[0]; out.dz = b[2] - a[2];
   return out;
 }
-const cp = { x: 0, y: 0, z: 0, dx: 0, dz: 0 };
+// a carrier d along the loop (0..L up the path's order, L..2L back): its spot on its side of the cable and the
+// way its riders face
+function carrierAt(lp, d, out) {
+  const up = d < lp.L;
+  pathAt(lp, up ? d : 2 * lp.L - d, out);
+  const len = Math.hypot(out.dx, out.dz) || 1, ux = out.dx / len, uz = out.dz / len;
+  const side = up ? 1 : -1;
+  out.fx = ux * side; out.fz = uz * side;   // riders face the way they travel
+  out.x += uz * lp.arm * side; out.z -= ux * lp.arm * side;
+  return out;
+}
+const cp = { x: 0, y: 0, z: 0, dx: 0, dz: 0, fx: 0, fz: 0 };
 function placeCarriers(t) {
   const cx = camera.position.x, cz = camera.position.z;
+  // the chair Goldie rides: its lift's chairs all shift so that one is where the ride has got to
+  if (ride.lp && ride.chair) ride.lp.shift = ride.d - (ride.chair.s0 + t * ride.lp.speed);
   for (const k of Object.keys(carriers)) {
     const m = carrierMeshes[k], e = m.instanceMatrix.array, fm = FAR_OF[k] && carrierMeshes[FAR_OF[k]], fe = fm && fm.instanceMatrix.array;
     let nNear = 0, nFar = 0;
     carriers[k].forEach((c) => {
-      const lp = c.lp, d = (c.s0 + t * lp.speed) % (2 * lp.L), up = d < lp.L;
-      pathAt(lp, up ? d : 2 * lp.L - d, cp);
-      const len = Math.hypot(cp.dx, cp.dz) || 1, ux = cp.dx / len, uz = cp.dz / len;
-      const side = up ? 1 : -1, fx = ux * side, fz = uz * side;   // riders face the way they travel
-      const x = cp.x + uz * lp.arm * side, z = cp.z - ux * lp.arm * side;
+      const lp = c.lp, d = (((c.s0 + t * lp.speed + lp.shift) % (2 * lp.L)) + 2 * lp.L) % (2 * lp.L);
+      carrierAt(lp, d, cp);
+      const x = cp.x, z = cp.z, fx = cp.fx, fz = cp.fz;
       // chairs and cabins: the full model near, a plain one farther, none past CHAIR_FAR
       let out = e, n = nNear;
       if (fm) {
@@ -2399,15 +2615,20 @@ function updateWorld(dt) {
 }
 
 // ---------- The skier: one camera-facing sprite from Goldie's sheet, plus a blob shadow ----------
+// The sheet (rendered from her 3D model) has 10 pose columns and 5 camera-angle rows: 0 = behind her,
+// 45, 90 (her right side), 135, 180 = in front. Cameras on her left use the mirrored frame.
 // Snowlight: each sprite pixel is lit from its normal map by the sun, the sky above
 // and the sunlit snow below, then snapped to four bands.
-const FRAMES = { stand: 0, carveL: 1, carveR: 2, tuck: 3, brake: 4, air: 5, land: 6, wipeout: 7, front: 8, celebrate: 9 };
-const SPRITE_H = 2.0, SPRITE_W = 1.5;
+const FRAMES = { stand: 0, carveL: 1, carveR: 2, tuck: 3, brake: 4, air: 5, land: 6, wipeout: 7, celebrate: 8, sit: 9 };
+const POSE_COLS = 10, ANGLE_ROWS = 5;
+const SPRITE_H = 2.0, SPRITE_W = 2.5;
 const skierMat = new THREE.ShaderMaterial({
   uniforms: {
     map: { value: goldieT },
     normalMap: { value: goldieN },
-    frameOffset: { value: 0 },
+    frameCol: { value: 0 },
+    frameRow: { value: 0 },
+    mirror: { value: 0 },
     sunLocal: { value: new THREE.Vector3(0, 1, 0) },
     sunColor: { value: SUN_COLOR },
     skyColor: { value: SKY_COLOR },
@@ -2415,23 +2636,25 @@ const skierMat = new THREE.ShaderMaterial({
     uLit: { value: 1 },
   },
   vertexShader: `
-    uniform float frameOffset;
+    uniform float frameCol, frameRow, mirror;
     varying vec2 vUv;
     void main() {
-      vUv = vec2(uv.x * 0.1 + frameOffset, uv.y);
+      float u = mix(uv.x, 1.0 - uv.x, mirror);
+      vUv = vec2((u + frameCol) / ${POSE_COLS}.0, (uv.y + ${ANGLE_ROWS - 1}.0 - frameRow) / ${ANGLE_ROWS}.0);
       gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     }`,
   fragmentShader: `
     uniform sampler2D map;
     uniform sampler2D normalMap;
     uniform vec3 sunLocal, sunColor, skyColor, bounce;
-    uniform float uLit;
+    uniform float uLit, mirror;
     varying vec2 vUv;
     float band(float v) { return max(0.12, floor(v * 4.0 + 0.5) / 4.0); }
     void main() {
       vec4 albedo = texture2D(map, vUv);
       if (albedo.a < 0.5) discard;
       vec3 n = normalize(texture2D(normalMap, vUv).rgb * 2.0 - 1.0);
+      if (mirror > 0.5) n.x = -n.x;
       vec3 l = sunColor * band(max(0.0, dot(n, sunLocal))) * uLit;
       l += skyColor * (0.35 + 0.35 * n.y);
       l += bounce * band(max(0.0, 0.15 - 0.8 * n.y)) * 0.55;
@@ -2497,6 +2720,7 @@ window.addEventListener('keydown', (e) => {
   e.preventDefault();
   if (e.repeat) return;
   keys.add(k);
+  if (phase === 'ride') { if (k === 'jump') skipRide(); return; }
   if (phase === 'ready') wake();
   else if (k === 'jump' && !physics.momentum) input.jump = true;
 });
@@ -2524,6 +2748,7 @@ canvas.addEventListener('pointerdown', (e) => {
   hockeyStop = false;
   ptr.woke = phase === 'ready';
   canvas.setPointerCapture?.(e.pointerId);
+  if (phase === 'ride') skipRide();
   wake();
 });
 canvas.addEventListener('pointermove', (e) => {
@@ -2581,6 +2806,233 @@ const FREE_KEYS = { KeyW: 'fwd', KeyS: 'back', KeyA: 'left', KeyD: 'right', Shif
 const speedEl = Object.assign(document.createElement('div'), { hidden: false });
 speedEl.style.cssText = 'position:fixed;top:12px;right:14px;font:600 15px ui-monospace,Menlo,monospace;color:#fff;text-shadow:0 1px 2px #13244d;pointer-events:none';
 document.body.append(speedEl);
+
+// ---------- HUD map (Jack 2026-10-22: minimap + full map, in the style of the Snowmass trail map) ----------
+// One painted image of the mountain is made once at load, north up (x right, z down): hillshade, forest from the
+// cover grid, open snow on the traced runs. The minimap (top-left) turns it so Goldie's heading points up; the full
+// map (M, or a two-finger tap) turns it half around so the summit is at the top, as the trail map is drawn.
+const HUDMAP = {
+  MPP: 4,                       // m per pixel of the painted image
+  MINI_SPAN: 1500,              // m across the minimap
+  MINI_PX: 160,                 // minimap size, px (116 on small screens)
+  RUN: { green: '#2e9e48', blue: '#1f7fd6', black: '#141414', expert: '#141414', none: '#7c8794' },
+  LIFT: '#d8202f',              // chairs and gondolas
+  SURFACE: '#6a3fb5',           // T-bar and platters
+  // the trail map's labelled points and its published elevations (ft, m); lift top unless marked bottom
+  PEAKS: [['CIRQUE T-BAR', 'Cirque T-Bar', 12510, 3813], ['HIGH ALPINE', 'High Alpine', 11880, 3612], ['BIG BURN', 'Big Burn', 11835, 3607],
+    ["SAM'S KNOB", "Sam's Knob", 10630, 3240], ['ELK CAMP', 'Elk Camp', 11325, 3452], ['BASE VILLAGE', 'Village Express', 8400, 2560, 'bottom'],
+    ['VILLAGE MALL', 'Sky Cab', 8606, 2623], ['TWO CREEKS', 'Two Creeks', 8110, 2472, 'bottom'], ['CAMPGROUND', 'Campground', 8235, 2510, 'bottom']],
+};
+const hudMap = { base: null, x0: 0, z0: 0, full: false, frame: 0 };
+const surfaceLift = (l) => l.kind === 't-bar' || l.kind === 'platter';
+const runDiff = MAP.runs.map((r, i) => (RUN_DATA.runs.find((q) => q.i === i) || {}).difficulty || 'none');
+const miniEl = Object.assign(document.createElement('canvas'), { className: 'hudmap-mini' });
+const fullEl = Object.assign(document.createElement('div'), { className: 'hudmap-full', hidden: true });
+const fullMap = document.createElement('canvas'), fullMe = document.createElement('canvas');
+fullEl.append(fullMap, fullMe);
+document.body.append(miniEl, fullEl);
+const mapFont = (px, w = 700, it = '') => `${it}${w} ${px}px "Helvetica Neue",Arial,sans-serif`;
+
+// The painted image, a band of rows at a time so the first seconds of skiing don't stutter.
+(async function paintHudMap() {
+  const t0 = performance.now(), areaB = await inflate(RUN_DATA.area);
+  const AREA = new Int8Array(areaB.buffer, areaB.byteOffset, areaB.length);   // half meters to the nearest run, < 0 on it
+  let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9;
+  for (const r of [...MAP.runs, ...MAP.lifts]) for (const [x, z] of r.points) { x0 = Math.min(x0, x); z0 = Math.min(z0, z); x1 = Math.max(x1, x); z1 = Math.max(z1, z); }
+  x0 -= 400; z0 -= 300; x1 += 400; z1 += 600;   // more room above the summit for its label
+  const M = HUDMAP.MPP, W = Math.ceil((x1 - x0) / M), Hp = Math.ceil((z1 - z0) / M);
+  const cv = Object.assign(document.createElement('canvas'), { width: W, height: Hp }), g = cv.getContext('2d');
+  const img = g.createImageData(W, Hp), px = img.data;
+  const bil = (a, fx, fz) => {
+    const i = clamp(Math.floor(fx), 0, NX - 2), j = clamp(Math.floor(fz), 0, NZ - 2), tx = fx - i, tz = fz - j, k = j * NX + i;
+    return (a[k] * (1 - tx) + a[k + 1] * tx) * (1 - tz) + (a[k + NX] * (1 - tx) + a[k + NX + 1] * tx) * tz;
+  };
+  const hash = (i, j) => { let h = (i * 374761393 + j * 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+  const mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+  // light from the top-left of the summit-up view (from +x, +z), 40 degrees up; slopes a little exaggerated
+  const LX = 0.54, LY = 0.64, LZ = 0.54, EX = 1.5;
+  const SNOW_D = [118, 150, 196], SNOW_L = [250, 252, 255], TREE_D = [10, 38, 30], TREE_L = [52, 98, 66], ASP_D = [96, 98, 104], ASP_L = [176, 174, 168], ROCK = [120, 118, 122];
+  for (let j = 0; j < Hp; j++) {
+    if (j % 32 === 0) await new Promise((r) => setTimeout(r, 0));
+    for (let i = 0; i < W; i++) {
+      const fx = (x0 + i * M - X0) / CELL, fz = (z0 + j * M - Z0) / CELL;
+      const gx = (bil(H, fx + 0.5, fz) - bil(H, fx - 0.5, fz)) / CELL * EX, gz = (bil(H, fx, fz + 0.5) - bil(H, fx, fz - 0.5)) / CELL * EX;
+      const lit = Math.max(0, (-gx * LX + LY - gz * LZ) / Math.hypot(gx, 1, gz)), t = clamp((lit - 0.25) / 0.75, 0, 1);
+      let c = mix(SNOW_D, SNOW_L, t);
+      if (bil(AREA, fx, fz) > 4) {
+        // painted trees: a stipple of crowns, denser where the forest is thicker; none on the runs
+        const k = clamp(Math.round(fz), 0, NZ - 1) * NX + clamp(Math.round(fx), 0, NX - 1), cov = COVER[k];
+        const con = (cov & 15) / 15, asp = ((cov >> 4) & 7) / 7, r = hash(i, j), r2 = hash(i >> 1, j >> 1);
+        if (cov >> 7) c = mix(c, ROCK, 0.45);
+        if (con > 0.05 && r2 < con * 1.1) c = mix(TREE_D, TREE_L, t * 0.8 + r * 0.25);
+        else if (asp > 0.1 && r2 < asp * 0.9) c = mix(ASP_D, ASP_L, t * 0.8 + r * 0.2);
+      }
+      const o = (j * W + i) * 4;
+      px[o] = c[0]; px[o + 1] = c[1]; px[o + 2] = c[2]; px[o + 3] = 255;
+    }
+  }
+  g.putImageData(img, 0, 0);
+  // the minimap's copy has the runs and lifts painted in, at the width they show at minimap scale
+  hudMap.x0 = x0; hudMap.z0 = z0;
+  drawMapLines(g, HUDMAP.MINI_PX / (HUDMAP.MINI_SPAN / M), 2.2);
+  hudMap.base = cv;
+  // the full map draws its own lines at its own scale, on a plain copy
+  hudMap.plain = document.createElement('canvas');
+  hudMap.plain.width = W; hudMap.plain.height = Hp;
+  hudMap.plain.getContext('2d').putImageData(img, 0, 0);
+  hudMap.paintMs = Math.round(performance.now() - t0);
+  if (hudMap.full) drawFullMap();
+})();
+
+// Runs as coloured lines with a white casing, lifts as red (purple for surface lifts) with a dot at each end.
+// g is in image pixels; k is screen px per image px, so lw stays in screen px.
+function drawMapLines(g, k, lw) {
+  const P = (x, z) => [(x - hudMap.x0) / HUDMAP.MPP, (z - hudMap.z0) / HUDMAP.MPP];
+  const line = (pts) => { g.beginPath(); pts.forEach(([x, z], n) => { const p = P(x, z); g[n ? 'lineTo' : 'moveTo'](p[0], p[1]); }); };
+  g.lineJoin = g.lineCap = 'round';
+  for (const pass of [0, 1]) MAP.runs.forEach((r, i) => {
+    line(r.points);
+    g.strokeStyle = pass ? HUDMAP.RUN[runDiff[i]] : 'rgba(255,255,255,0.85)';
+    g.lineWidth = (pass ? lw : lw + 1.6) / k;
+    g.stroke();
+  });
+  for (const l of MAP.lifts) {
+    const col = surfaceLift(l) ? HUDMAP.SURFACE : HUDMAP.LIFT;
+    line(l.points);
+    g.strokeStyle = '#fff'; g.lineWidth = (lw + 2.2) / k; g.stroke();
+    g.strokeStyle = col; g.lineWidth = lw / k; g.stroke();
+    g.fillStyle = col; g.lineWidth = 1 / k;
+    for (const [x, z] of [l.points[0], l.points[l.points.length - 1]]) {
+      const p = P(x, z);
+      g.beginPath(); g.arc(p[0], p[1], lw * 1.6 / k, 0, 7); g.fill(); g.stroke();
+    }
+  }
+}
+// Goldie: a gold arrow pointing where she (or the freecam) faces.
+function mapArrow(g, s) {
+  g.beginPath(); g.moveTo(0, -s); g.lineTo(s * 0.62, s * 0.7); g.lineTo(0, s * 0.35); g.lineTo(-s * 0.62, s * 0.7); g.closePath();
+  g.fillStyle = '#f4c542'; g.fill(); g.lineWidth = 1.8; g.strokeStyle = '#13244d'; g.stroke();
+}
+const mapWhere = () => {
+  const p = free.on ? free.pos : sk.pos, e = camera.matrixWorld.elements;
+  return { x: p.x, z: p.z, yaw: Math.atan2(-e[8], e[10]) };   // yaw 0 = facing north (-z), clockwise
+};
+function sizeHudMap() {
+  const S = Math.min(innerWidth, innerHeight) < 500 ? 116 : HUDMAP.MINI_PX, d = Math.min(window.devicePixelRatio || 1, 2);
+  miniEl.width = miniEl.height = Math.round(S * d);
+  miniEl.style.width = miniEl.style.height = `${S}px`;
+  hudMap.mini = S; hudMap.dpr = d;
+  if (hudMap.full) drawFullMap();
+}
+function drawMiniMap() {
+  if (!hudMap.base || hudMap.full) return;
+  const S = hudMap.mini, R = S / 2, g = miniEl.getContext('2d'), w = mapWhere();
+  const k = S / (HUDMAP.MINI_SPAN / HUDMAP.MPP);
+  g.setTransform(hudMap.dpr, 0, 0, hudMap.dpr, 0, 0);
+  g.clearRect(0, 0, S, S);
+  g.save();
+  g.beginPath(); g.arc(R, R, R - 1, 0, 7); g.clip();
+  g.translate(R, R); g.rotate(-w.yaw); g.scale(k, k);
+  g.translate(-(w.x - hudMap.x0) / HUDMAP.MPP, -(w.z - hudMap.z0) / HUDMAP.MPP);
+  g.drawImage(hudMap.base, 0, 0);
+  g.restore();
+  g.beginPath(); g.arc(R, R, R - 1.5, 0, 7); g.lineWidth = 3; g.strokeStyle = '#fff'; g.stroke();
+  g.beginPath(); g.arc(R, R, R - 0.5, 0, 7); g.lineWidth = 1; g.strokeStyle = 'rgba(19,36,77,.8)'; g.stroke();
+  g.translate(R, R); mapArrow(g, 8);
+}
+// The full map: the whole mountain, summit at the top, with run, lift, peak and base labels. Drawn once when it
+// opens (or the window changes size); only Goldie's arrow is redrawn each frame.
+function drawFullMap() {
+  if (!hudMap.plain) return;
+  const B = hudMap.plain, d = hudMap.dpr, small = Math.min(innerWidth, innerHeight) < 500, m = small ? 8 : 16;
+  const s = Math.min((innerWidth - 2 * m) / B.width, (innerHeight - 2 * m) / B.height), w = B.width * s, h = B.height * s;
+  for (const c of [fullMap, fullMe]) {
+    c.width = Math.round(w * d); c.height = Math.round(h * d);
+    Object.assign(c.style, { width: `${w}px`, height: `${h}px`, left: `${(innerWidth - w) / 2}px`, top: `${(innerHeight - h) / 2}px` });
+  }
+  const g = fullMap.getContext('2d');
+  g.setTransform(d, 0, 0, d, 0, 0);
+  g.imageSmoothingQuality = 'high';
+  g.save(); g.translate(w, h); g.rotate(Math.PI); g.scale(s, s); g.drawImage(B, 0, 0); drawMapLines(g, s, 2); g.restore();
+  const S = (x, z) => [w - (x - hudMap.x0) / HUDMAP.MPP * s, h - (z - hudMap.z0) / HUDMAP.MPP * s];
+  hudMap.toScreen = S;
+  const fs = small ? 8 : 11, nfs = small ? 6 : 8;
+  const ends = HUDMAP.PEAKS.map(([name, lift, ft, me, end]) => {
+    const l = MAP.lifts.find((q) => q.name === lift), p = end === 'bottom' ? l.points[0] : l.points[l.points.length - 1];
+    return [name, ft, me, ...S(p[0], p[1]), end === 'bottom'];
+  });
+  // the peak and base labels go on last but claim their room first
+  // bases hang their label below the point, peaks above it
+  const placed = ends.map(([, , , x, y, low]) => (low ? [x - 50, y, x + 50, y + fs * 2.2 + 8] : [x - 50, y - fs * 2.2 - 8, x + 50, y]));
+  const tag = (label, pts, fill, font) => {
+    const n = pts.length >> 1, a = S(...pts[n - 1]), b = S(...pts[n + 1]), mid = S(...pts[n]);
+    let ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
+    if (ang > Math.PI / 2) ang -= Math.PI;
+    if (ang < -Math.PI / 2) ang += Math.PI;
+    g.font = font;
+    const tw = g.measureText(label).width + 6, th = nfs + 4;
+    const ex = Math.abs(Math.cos(ang)) * tw / 2 + Math.abs(Math.sin(ang)) * th / 2, ey = Math.abs(Math.sin(ang)) * tw / 2 + Math.abs(Math.cos(ang)) * th / 2;
+    const box = [mid[0] - ex, mid[1] - ey, mid[0] + ex, mid[1] + ey];
+    if (placed.some((q) => q[0] < box[2] && box[0] < q[2] && q[1] < box[3] && box[1] < q[3])) return;   // no overlaps
+    placed.push(box);
+    g.save(); g.translate(mid[0], mid[1]); g.rotate(ang);
+    g.fillStyle = fill; g.fillRect(-tw / 2, -th / 2, tw, th);
+    g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(label, 0, 0.5);
+    g.restore();
+  };
+  for (const l of MAP.lifts) {
+    // a two-point lift line gets a midpoint so its label can sit on it
+    const [a, b] = [l.points[0], l.points[l.points.length - 1]];
+    const pts = l.points.length > 2 ? l.points : [a, [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], b];
+    tag(l.name, pts, surfaceLift(l) ? HUDMAP.SURFACE : HUDMAP.LIFT, mapFont(nfs + 1, 700, 'italic '));
+  }
+  MAP.runs.forEach((r, i) => { if (r.name && r.points.length >= 3) tag(r.name.toUpperCase(), r.points, HUDMAP.RUN[runDiff[i]], mapFont(nfs)); });
+  for (const [name, ft, me, x, y, low] of ends) {
+    const t2 = `${ft.toLocaleString('en-US')} FT | ${me.toLocaleString('en-US')} M`;
+    g.font = mapFont(fs); const w1 = g.measureText(name).width;
+    g.font = mapFont(fs * 0.8, 600); const w2 = g.measureText(t2).width;
+    const bw = Math.max(w1, w2) + 10, bh = fs * 2.2, bx = x - bw / 2, by = low ? y + 8 : y - bh - 8;
+    g.fillStyle = 'rgba(255,255,255,.95)'; g.strokeStyle = '#13244d'; g.lineWidth = 1;
+    g.beginPath(); g.roundRect(bx, by, bw, bh, 3); g.fill(); g.stroke();
+    g.fillStyle = '#13244d'; g.textAlign = 'center'; g.textBaseline = 'top';
+    g.font = mapFont(fs); g.fillText(name, x, by + 3);
+    g.font = mapFont(fs * 0.8, 600); g.fillText(t2, x, by + 3 + fs * 1.1);
+  }
+}
+function drawFullMe() {
+  if (!hudMap.toScreen) return;
+  const g = fullMe.getContext('2d'), w = mapWhere(), [x, y] = hudMap.toScreen(w.x, w.z);
+  g.setTransform(hudMap.dpr, 0, 0, hudMap.dpr, 0, 0);
+  g.clearRect(0, 0, fullMe.width, fullMe.height);
+  g.translate(x, y); g.rotate(w.yaw + Math.PI); mapArrow(g, 10);
+}
+function setFullMap(on) {
+  hudMap.full = on;
+  fullEl.hidden = !on;
+  miniEl.hidden = on;
+  if (on) drawFullMap();
+}
+// called from render(): the minimap every other frame, the full map's arrow every frame
+function updateHudMap() {
+  if (hudMap.full) drawFullMe();
+  else if (hudMap.frame++ & 1) drawMiniMap();
+}
+window.addEventListener('resize', sizeHudMap);
+sizeHudMap();
+// M opens and closes the full map; on phones, a quick two-finger tap does.
+window.addEventListener('keydown', (e) => { if (e.code === 'KeyM' && !e.repeat) setFullMap(!hudMap.full); });
+{
+  let t0 = 0, most = 0;
+  window.addEventListener('touchstart', (e) => {
+    if (most === 0) t0 = performance.now();
+    most = Math.max(most, e.touches.length);
+  }, { passive: true });
+  window.addEventListener('touchend', (e) => {
+    if (e.touches.length) return;
+    if (most === 2 && performance.now() - t0 < 300) setFullMap(!hudMap.full);
+    most = 0;
+  }, { passive: true });
+}
 const DEBUG_ITEMS = [
   { name: 'Freecam', get: () => free.on, set: (on) => setFreecam(on) },
   { name: 'Momentum physics (off = Classic)', get: () => physics.momentum, set: (on) => { physics.momentum = on; } },
@@ -2725,20 +3177,62 @@ function placeSkier(x, z, heading, speed) {
   sk.edgeA = 0; sk.latA = 0; sk.roll = 0; sk.kappa = 0; sk.lean = 0;
   cameraSnap = true;
 }
-function toSummit() {
+function toSummit(at = META.start) {
   phase = 'ready';
-  placeSkier(META.start.x, META.start.z, META.start.heading, 0);
+  if (at === META.start) fadeEl.classList.remove('black');
+  placeSkier(at.x, at.z, at.heading, 0);
   hockeyStop = false;
   // a start whose run tiles aren't in yet stays behind the fade until they are, then stands on them
-  const loads = runStream ? runStream(META.start.x, META.start.z, true) : [];
+  const loads = runStream ? runStream(at.x, at.z, true) : [];
   if (!loads.length) { fadeEl.classList.remove('on'); return; }
   fadeEl.classList.add('on');
-  const at = { x: META.start.x, z: META.start.z };
   Promise.all(loads).then(() => {
     if (phase === 'ready' && sk.pos.x === at.x && sk.pos.z === at.z) placeSkier(at.x, at.z, sk.heading, 0);
     fadeEl.classList.remove('on');
   });
 }
+// The lift ride: fade to black, ride (the camera follows her chair, see render), then fade to black and stand
+// at the top. ride.t counts up from -FADE while the screen goes black, then through the ride.
+const FADE = 0.45;
+function startRide(R) {
+  phase = 'ride';
+  Object.assign(ride, { lp: null, chair: null, R, t: -FADE, d: R.d0 });
+  sk.vel.set(0, 0, 0);
+  sk.edgeA = sk.lean = 0;
+  hockeyStop = false;
+  fadeEl.classList.add('black', 'on');
+}
+function skipRide() {
+  if (phase !== 'ride' || ride.t < 0) return;
+  phase = 'unload';
+  backT = 0;
+  fadeEl.classList.add('on');
+}
+function rideStep(dt) {
+  const R = ride.R;
+  if (phase === 'unload') {
+    if ((backT += dt) <= FADE) return;
+    ride.lp = ride.chair = null;
+    toSummit(R.top);
+    return;
+  }
+  const was = ride.t;
+  ride.t += dt;
+  if (was < 0 && ride.t >= 0) {
+    // black: put her on the chair at the loading spot and fade in
+    ride.lp = R.lp; ride.chair = R.chair;
+    fadeEl.classList.remove('on');
+    cameraSnap = true;
+  }
+  if (ride.t < 0) return;
+  ride.d = Math.min(R.d1, R.d0 + ride.t * R.lp.speed);
+  carrierAt(R.lp, ride.d, rideAt);
+  sk.prev.copy(sk.pos);
+  sk.pos.set(rideAt.x, rideAt.y, rideAt.z);
+  sk.heading = Math.atan2(rideAt.fx, -rideAt.fz);
+  if (ride.d >= R.d1 - R.lp.speed * FADE) skipRide();
+}
+const rideAt = { x: 0, y: 0, z: 0, dx: 0, dz: 0, fx: 0, fz: 0 };
 function wake() {
   if (phase === 'ready') {
     phase = 'skiing';
@@ -3419,6 +3913,7 @@ function step() {
     if ((backT += dt) > 0.45) toSummit();
     return;
   }
+  if (phase === 'ride' || phase === 'unload') { rideStep(dt); return; }
   if (phase === 'ready') {
     sk.prev.copy(sk.pos);
     return;
@@ -3457,6 +3952,10 @@ function step() {
   else sk.stopT = 0;
   if (sk.stopT > STOP_TIME || offMap(sk.pos.x, sk.pos.z)) sendBack();
   solidY = null;
+  // into a lift's ring of light: ride it up
+  if (phase === 'skiing' && !sk.crashed) for (const R of RIDES) {
+    if (Math.hypot(sk.pos.x - R.ring.x, sk.pos.z - R.ring.z) < RING_R - 0.3 && Math.abs(sk.pos.y - R.ring.y) < 2) { startRide(R); break; }
+  }
 }
 
 // ---------- Rendering ----------
@@ -3490,10 +3989,22 @@ function updateCamera(p, dt) {
   cameraSnap = false;
 }
 
-function pickFrame(cameraInFront) {
+// On the chair: behind it and a little above, looking up the line. Goldie sits on the seat in her sit frame;
+// RIDE_SEAT is her sprite's base (the tails of her hanging skis) below the cable, so her hips rest on the cushion.
+const RIDE_SEAT = -3.05, rideLook = { x: 0, y: 0, z: 0, dx: 0, dz: 0, fx: 0, fz: 0 };
+function rideCamera(p) {
+  const fx = Math.sin(sk.heading), fz = -Math.cos(sk.heading);
+  const R = ride.R, ahead = Math.min(ride.d + 30, R.d1 + LOAD);
+  carrierAt(R.lp, ahead, rideLook);
+  camera.position.set(p.x - fx * 4.5, p.y - 1.5, p.z - fz * 4.5);
+  // the sky is a band: never tip up so far that its top edge shows
+  const dist = Math.hypot(rideLook.x - camera.position.x, rideLook.z - camera.position.z);
+  camera.lookAt(rideLook.x, Math.min(rideLook.y - 1.9, camera.position.y - dist * 0.02), rideLook.z);
+  if (Math.abs(camera.fov - 60) > 0.05) { camera.fov = 60; camera.updateProjectionMatrix(); }
+}
+function pickFrame() {
   const speed = sk.vel.length();
   if (sk.crashed) return FRAMES.wipeout;
-  if (cameraInFront) return FRAMES.front;
   if (!sk.grounded && sk.airTime > 0.12) return FRAMES.air;
   if (sk.landT > 0) return FRAMES.land;
   if (sk.brake && speed > 1) return FRAMES.brake;
@@ -3561,15 +4072,19 @@ function facingCam(p) {
 function render(alpha, dt) {
   const p = view.copy(sk.prev).lerp(sk.pos, alpha);
   const snap = cameraSnap;
+  const riding = phase === 'ride' || phase === 'unload';
   if (free.on) updateFreecam(dt);
+  else if (riding) rideCamera(p);
   else updateCamera(p, dt);
   updateTerrain();
   updatePatch();
+  updateKickers();
   updateTrees(snap);
   sky.position.set(camera.position.x, camera.position.y + sky.userData.h * 0.36, camera.position.z);
 
   // Sprite: turn to face the camera around the vertical axis only.
   skierMesh.position.copy(p);
+  if (riding) skierMesh.position.y += RIDE_SEAT;
   const yaw = Math.atan2(camera.position.x - p.x, camera.position.z - p.z);
   skierMesh.rotation.y = yaw;
   // Motion feel: Goldie leans into the turn as far as her skis are on edge (mirrored when seen from the front).
@@ -3578,13 +4093,19 @@ function render(alpha, dt) {
   const cy = Math.cos(yaw), sy = Math.sin(yaw);
   skierMat.uniforms.sunLocal.value.set(SUN_DIR.x * cy - SUN_DIR.z * sy, SUN_DIR.y, SUN_DIR.x * sy + SUN_DIR.z * cy);
   tmpA.set(camera.position.x - p.x, 0, camera.position.z - p.z).normalize();
-  const facing = tmpA.x * Math.sin(sk.heading) - tmpA.z * Math.cos(sk.heading);
-  const frame = pickFrame(facing > 0.35);
-  if (frame !== sk.frame) { skierMat.uniforms.frameOffset.value = frame / 10; sk.frame = frame; }
+  // Camera angle round her: 0 behind, 180 in front, snapped to the sheet's 45 degree rows; her left side is mirrored.
+  const ahead = tmpA.x * Math.sin(sk.heading) - tmpA.z * Math.cos(sk.heading);
+  const side = tmpA.x * Math.cos(sk.heading) + tmpA.z * Math.sin(sk.heading);
+  const mirror = side < 0;
+  let frame = riding ? FRAMES.sit : pickFrame(), row = sk.crashed ? 0 : Math.round(Math.atan2(Math.abs(side), -ahead) / (Math.PI / 4));
+  if (mirror && frame === FRAMES.carveL) frame = FRAMES.carveR;
+  else if (mirror && frame === FRAMES.carveR) frame = FRAMES.carveL;
+  const U = skierMat.uniforms;
+  U.frameCol.value = frame; U.frameRow.value = row; U.mirror.value = mirror && !sk.crashed ? 1 : 0; sk.frame = frame;
   if (sk.crashed) {
-    // the wipeout frame turned so her body lies along the box (the drawing's body leans 58 deg left), centred on it
+    // the behind-view wipeout frame turned so her body lies along the box (in the drawing her head points straight down), centred on it
     bA.set(0, 0, 1).applyQuaternion(bail.q).transformDirection(camera.matrixWorldInverse);
-    const th = Math.atan2(-bA.x, bA.y) - 58 * Math.PI / 180, c = SPRITE_H / 2 - 0.04;
+    const th = Math.atan2(-bA.x, bA.y) - Math.PI, c = SPRITE_H / 2 - 0.04;
     skierMesh.rotation.z = th;
     skierMesh.position.set(p.x + c * Math.sin(th) * cy, p.y - c * Math.cos(th), p.z - c * Math.sin(th) * sy);
   }
@@ -3598,11 +4119,14 @@ function render(alpha, dt) {
   shadow.material.opacity = clamp(1 - lift / 8, 0.2, 1);
   shadow.scale.setScalar(1 + lift * 0.08);
 
-  updateSpray(p, dt);
-  if (!speedEl.hidden) speedEl.textContent = `${Math.round(sk.vel.length() * 3.6)} km/h · ${physics.momentum ? (physics.carve ? 'Carve' : 'Momentum') + (physics.assists ? '' : ', raw') : 'Classic'} · ${(Math.abs(sk.latA) / G).toFixed(1)} g · ${fps} fps`;
+  shadow.visible = !riding;
+  if (!riding) updateSpray(p, dt);
+  ringMat.uniforms.time.value = performance.now() / 1000;
+  if (!speedEl.hidden) speedEl.textContent = `${Math.round(sk.vel.length() * 2.23694)} mph · ${physics.momentum ? (physics.carve ? 'Carve' : 'Momentum') + (physics.assists ? '' : ', raw') : 'Classic'} · ${(Math.abs(sk.latA) / G).toFixed(1)} g · ${fps} fps`;
   updateWorld(dt);
   skierMat.uniforms.uLit.value = sunAt(p.x, p.z);
   renderer.render(scene, camera);
+  updateHudMap();
 }
 
 // The collision shapes as wireframes (Tab menu: Show collision shapes)
@@ -3669,7 +4193,7 @@ function frame(now) {
   }
   render(manual ? 1 : acc / STEP, dt);
 }
-skierMat.uniforms.frameOffset.value = FRAMES.stand / 10;
+skierMat.uniforms.frameCol.value = FRAMES.stand;
 resize();
 applyTime('noon');
 toSummit();
@@ -3704,7 +4228,8 @@ window.__golden = {
   time(k) { applyTime(k); },
   pixel(on) { setPixelLook(on); },
   lifts: liftPaths, carriers, runs: RUNS, signs: signSpots,
+  map: { get ready() { return !!hudMap.plain; }, get paintMs() { return hudMap.paintMs; }, setFull: setFullMap, drawMini: drawMiniMap },
   get patch() { return PATCH; }, patchEdge, setPatch, groundY, starts: STARTS, get fps() { return fps; },
   streamTo: (x, z) => Promise.all(runStream ? runStream(x, z, true) : []),
-  solids: SOLIDS, bail, BAIL,
+  solids: SOLIDS, bail, BAIL, kickers: KICKERS, rides: RIDES, ride, startRide, skipRide,
 };
