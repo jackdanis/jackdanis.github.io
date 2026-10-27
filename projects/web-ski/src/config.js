@@ -12,7 +12,7 @@ export const SNOW = {
 export const TUCK_GRIP = 0.6;          // tucked, less edge grip
 export const SKID = 0.55;              // speed lost to sideways slip, share of normal force
 export const BRAKE = 8.5;              // hockey stop, m/s^2
-export const POP_COOLDOWN = 0.35;
+export const POP_COOLDOWN = 0.15;      // s between ollies; counts down in the air too, so landing doesn't wait
 export const PUSH = 3.5;               // push off at the summit and after a wipeout
 export const TAKEOFF_MARGIN = 0.0005;  // m per step a crest must drop away before it launches you
 export const REAL_AIR = 0.22;          // shorter air is a bump, not a jump
@@ -29,8 +29,9 @@ export const MO = {
   DRAG: 0.0045,                 // per (m/s)^2 standing (75 kg skier)
   TUCK_DRAG: 0.0024,            // ...and tucked
   POLE: 1.7,                    // m/s per double-pole push from a standstill...
-  POLE_MAX: 5.5,                // ...fading to zero at this speed (12 mph)
-  POLE_EVERY: 0.55,             // s between pushes while held
+  POLE_MAX: 8,                  // ...fading to zero at this speed (18 mph): her arms can't push the snow faster than it passes
+  POLE_T: 0.5,                  // s for one push (reach, plant, crunch, follow-through) from a standstill...
+  POLE_T_V: 0.035,              // ...plus this per m/s she is going (0.78 s at 18 mph)
   OLLIE_MIN: 3.0,               // m/s pop from a tap...
   OLLIE_MAX: 5.5,               // ...up to this after OLLIE_CHARGE s of loading
   OLLIE_CHARGE: 0.5,
@@ -38,11 +39,13 @@ export const MO = {
   SPIN_IN: 7,                   // rad/s^2: steering in the air torques the spin
   SPIN_TUCK: 1.6,
   SPIN_DAMP: 0.4,               // spin lost per second with no steer
+  FLIP_IN: 5,                   // rad/s^2: up/down in the air torques a flip (up = front flip), and it carries on
+  FLIP_DAMP: 0.4,               // flip lost per second with nothing held
   CRASH_MU: 0.6,                // a wipeout slides with friction plus a base drag
   CRASH_BASE: 2,
   CRASH_MAX: 5,                 // s before she self-arrests on any slope
 };
-export const ASSIST = { grip: 1.2, cap: 34, capDrag: 0.25, airG: 1.15, align: 2.5, clean: 25 };
+export const ASSIST = { grip: 1.2, cap: 34, capDrag: 0.25, airG: 1.15, clean: 25 };
 // ---------- Carve physics ----------
 // Steering asks for a share of the tightest turn you can hold: radius = max(R_MIN, v^2 / grip). Goldie leans to balance
 // the turn, so full steer is a clean carve at the grip limit. Carving costs speed; slow, the skis pivot; brake + steer
@@ -71,6 +74,7 @@ export const BAIL = {
   HIT: 9,                       // m/s into a wall or trunk that bails (about 20 mph)
   MISS: 70,                     // degrees between skis and travel on landing that bails
   IMPACT: 16,                   // m/s landing impact that bails (about a 13 m drop)
+  FLIP: 45,                     // degrees off upright (mid-flip) on landing that bails
   L: 1.8, W: 0.6, T: 0.25,      // body box: length, width, thickness
   MU: 0.7,
   E: 0.15,

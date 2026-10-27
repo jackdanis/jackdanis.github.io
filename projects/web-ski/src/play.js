@@ -12,21 +12,26 @@ import { FRAMES } from './goldie.js';
 
 // ---------- Input ----------
 // Keys: Left/Right or A/D steer, Up/W poles, Down/S brakes, Shift tucks, Space jumps (hold to load an ollie).
-// Touch: drag to steer, rest to tuck, swipe down to pole, swipe up to brake, tap to jump. The newest finger steers.
-export const input = { steer: 0, tuck: false, brake: false, pole: false, jump: false };
+// In the air Left/Right spin her and Up/Down flip her (up a front flip, down a back flip); together they do both.
+// Each press of Up (or swipe down) is one push; holding it keeps poling.
+// Touch: drag to steer, rest to tuck, swipe down to pole, swipe up to brake, tap to jump. The newest finger steers;
+// in the air, dragging it up or down flips her.
+export const input = { steer: 0, flip: 0, tuck: false, brake: false, pole: false, jump: false };
 export const keys = new Set();
 let keySteer = 0;
 const STEER_PX = 70;
-const ptr = { id: null, x0: 0, x: 0, y: 0, t0: 0, travel: 0, lastMove: 0, steer: 0, woke: false, hist: [], passive: false, topY: 0 };
+const ptr = { id: null, x0: 0, x: 0, y: 0, y0: 0, t0: 0, travel: 0, lastMove: 0, steer: 0, woke: false, hist: [], passive: false, topY: 0 };
 const touches = new Map();      // finger id -> [x, y]
 const KEYMAP = { ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', ArrowUp: 'pole', KeyW: 'pole', ArrowDown: 'brake', KeyS: 'brake', ShiftLeft: 'tuck', ShiftRight: 'tuck', Space: 'jump' };
 window.addEventListener('keydown', (e) => {
+  if (e.target instanceof HTMLInputElement) return;   // typing a note
   if (debugKey(e)) return;
   const k = KEYMAP[e.code];
   if (!k) return;
   e.preventDefault();
   if (e.repeat) return;
   keys.add(k);
+  if (k === 'pole') state.poleTap = true;
   if (state.phase === 'ride') { if (k === 'jump') skipRide(); return; }
   if (state.phase === 'ready') wake();
 });
@@ -35,10 +40,10 @@ window.addEventListener('keyup', (e) => {
   const k = KEYMAP[e.code]; if (k) keys.delete(k);
   if (k === 'jump' && state.phase === 'skiing') input.jump = true;
 });
-window.addEventListener('blur', () => { keys.clear(); touches.clear(); ptr.id = null; ptr.steer = 0; state.hockeyStop = false; state.poleSwipe = false; free.keys.clear(); free.drag = false; });
+window.addEventListener('blur', () => { keys.clear(); touches.clear(); ptr.id = null; ptr.steer = 0; state.hockeyStop = false; state.poleTap = false; free.keys.clear(); free.drag = false; });
 function anchor(id, x, y, handedOver) {
   ptr.id = id;
-  ptr.x0 = ptr.x = x; ptr.y = y;
+  ptr.x0 = ptr.x = x; ptr.y = ptr.y0 = y;
   ptr.t0 = ptr.lastMove = performance.now();
   ptr.travel = handedOver ? Infinity : 0;  // a finger already down can't tap
   ptr.passive = handedOver;                // ...or tuck until it moves
@@ -73,7 +78,10 @@ canvas.addEventListener('pointermove', (e) => {
   if (state.hockeyStop && ptr.y - ptr.topY > 20) state.hockeyStop = false;
   // Poles: a quick downward flick, one push each.
   const down = ptr.y - ptr.hist[0][2];
-  if (dy > 0 && down > 40 && down > 1.5 * side) { state.poleSwipe = true; ptr.hist = [[now, ptr.x, ptr.y]]; }
+  if (dy > 0 && down > 40 && down > 1.5 * side) { state.poleTap = true; ptr.hist = [[now, ptr.x, ptr.y]]; }
+  // In the air the vertical drag flips her instead, measured from where the finger was at takeoff.
+  if (sk.grounded) ptr.y0 = ptr.y;
+  else { state.hockeyStop = false; state.poleTap = false; }
   // keep the anchor within one full steer of the thumb so reversing is instant
   if (ptr.x - ptr.x0 > STEER_PX) ptr.x0 = ptr.x - STEER_PX;
   if (ptr.x0 - ptr.x > STEER_PX) ptr.x0 = ptr.x + STEER_PX;
@@ -201,6 +209,7 @@ function readInput(dt) {
     input.tuck = !!state.testHold.tuck && !state.testHold.brake;
     input.brake = !!state.testHold.brake;
     input.pole = !!state.testHold.pole;
+    input.flip = clamp(state.testHold.flip || 0, -1, 1);
     return;
   }
   const target = (keys.has('right') ? 1 : 0) - (keys.has('left') ? 1 : 0);
@@ -210,8 +219,9 @@ function readInput(dt) {
   const held = ptr.id !== null;
   const still = held && !ptr.passive && now - ptr.lastMove > 200 && now - ptr.t0 > 200 && Math.abs(ptr.steer) < 0.25;
   input.steer = clamp(keySteer + (held ? ptr.steer : 0), -1, 1);
+  input.flip = clamp((keys.has('pole') ? 1 : 0) - (keys.has('brake') ? 1 : 0) + (held && !sk.grounded ? (ptr.y0 - ptr.y) / STEER_PX : 0), -1, 1);
   input.brake = keys.has('brake') || state.hockeyStop;
-  input.pole = keys.has('pole') || state.poleSwipe;
+  input.pole = keys.has('pole');
   input.tuck = !input.brake && (keys.has('tuck') || still);
 }
 
@@ -221,7 +231,9 @@ export const sk = {
   heading: 0, grounded: true, airTime: 0, airMax: 0, popCD: 0,
   crashed: false, crashT: 0, landT: 0, landQ: '', skid: 0, tuck: false, brake: false, steer: 0, frame: FRAMES.stand,
   stopT: 0,
-  edge: 0, spin: 0, yawRate: 0, charge: 0, poleCD: 0, poleT: 0, pole: false,
+  edge: 0, spin: 0, yawRate: 0, charge: 0, pole: false,
+  poleP: -1, poleQ: false,            // where she is in a double-pole push (0..1, -1 not poling), and the next push queued
+  flip: 0, flipRate: 0, flipIn: 0,    // rad turned forward in the air (front flip +), its rate, and the stick on it
   edgeA: 0, latA: 0, roll: 0, kappa: 0, lean: 0,
 };
 export let backT = 0, trips = 0;
@@ -239,7 +251,8 @@ export function placeSkier(x, z, heading, speed) {
   sk.vel.copy(tmpA).multiplyScalar(speed);
   sk.grounded = true; sk.airTime = 0; sk.airMax = 0; sk.popCD = 0;
   sk.crashed = false; sk.crashT = 0; sk.landT = 0; sk.skid = 0; sk.stopT = 0;
-  sk.edge = 0; sk.spin = 0; sk.yawRate = 0; sk.charge = 0; sk.poleCD = 0;
+  sk.edge = 0; sk.spin = 0; sk.yawRate = 0; sk.charge = 0; sk.poleP = -1; sk.poleQ = false;
+  sk.flip = 0; sk.flipRate = 0;
   sk.edgeA = 0; sk.latA = 0; sk.roll = 0; sk.kappa = 0; sk.lean = 0;
   state.cameraSnap = true;
 }
@@ -324,6 +337,25 @@ export function skiDir(n, out) {
 // ---------- Skiing: carve turns on Momentum ----------
 const travelYaw = () => Math.atan2(sk.vel.x, -sk.vel.z);
 
+// Double-poling: reach, plant, crunch, follow-through, timed by her arms rather than a clock. A press starts a push
+// at once if her arms are free, or queues the next one; holding Up keeps them coming. One push takes longer the faster
+// she goes, and the shove (while the poles are planted) weakens until her arms can't push the snow faster than it passes.
+export const POLE_PHASES = [0.30, 0.12, 0.30, 0.28];
+const SHOVE = [POLE_PHASES[0], POLE_PHASES[0] + POLE_PHASES[1] + POLE_PHASES[2]];
+function poleStep(dt, f, speed) {
+  const go = sk.pole || state.poleTap;
+  state.poleTap = false;
+  if (sk.tuck || sk.brake) { sk.poleP = -1; sk.poleQ = false; return; }
+  if (sk.poleP < 0) { if (!go) return; sk.poleP = 0; }
+  else if (go) sk.poleQ = true;
+  const p0 = sk.poleP, p1 = p0 + dt / (MO.POLE_T + MO.POLE_T_V * speed);
+  const shove = Math.max(0, Math.min(p1, SHOVE[1]) - Math.max(p0, SHOVE[0])) / (SHOVE[1] - SHOVE[0]);
+  if (shove > 0) sk.vel.addScaledVector(f, MO.POLE * shove * Math.max(0, 1 - speed / MO.POLE_MAX));
+  if (p1 < 1) sk.poleP = p1;
+  else if (sk.poleQ || sk.pole) { sk.poleP = p1 - 1; sk.poleQ = false; }
+  else sk.poleP = -1;
+}
+
 function groundStep(dt) {
   const A = ASSIST;
   const s0 = sample(sk.pos.x, sk.pos.z);
@@ -392,12 +424,7 @@ function groundStep(dt) {
     speed = next;
   }
 
-  sk.poleCD = Math.max(0, sk.poleCD - dt);
-  if (sk.pole && sk.poleCD === 0 && speed < MO.POLE_MAX) {
-    sk.vel.addScaledVector(f, MO.POLE * (1 - speed / MO.POLE_MAX));
-    sk.poleCD = MO.POLE_EVERY;
-    sk.poleT = 0.22;
-  }
+  poleStep(dt, f, speed);
 
   // Path turn rate and sideways g: spin for jumps, bank for the camera.
   sk.yawRate += (wrapAngle(travelYaw() - yaw0) / dt - sk.yawRate) * 0.3;
@@ -421,6 +448,7 @@ function groundStep(dt) {
     sk.airTime = 0;
     sk.airMax = Math.max(0, gap);
     sk.spin = sk.yawRate;
+    sk.flip = 0; sk.flipRate = 0;
     sk.latA = 0;
     return;
   }
@@ -434,17 +462,19 @@ function groundStep(dt) {
 
 function airStep(dt) {
   const A = ASSIST;
+  sk.popCD = Math.max(0, sk.popCD - dt);
   // Air steering torques the spin; let go and it carries on.
   if (sk.steer) sk.spin += sk.steer * MO.SPIN_IN * dt;
   else {
     sk.spin *= Math.max(0, 1 - MO.SPIN_DAMP * dt);
-    // Assist: with nothing held and little spin, the skis drift back in line with travel.
-    if (A.align && Math.abs(sk.spin) < 2) {
-      sk.spin *= Math.max(0, 1 - 3 * dt);
-      sk.heading += clamp(wrapAngle(travelYaw() - sk.heading), -A.align * dt, A.align * dt);
-    }
+    // a slow spin settles; her heading stays wherever you leave it
+    if (Math.abs(sk.spin) < 2) sk.spin *= Math.max(0, 1 - 3 * dt);
   }
   sk.heading = wrapAngle(sk.heading + sk.spin * (sk.tuck ? MO.SPIN_TUCK : 1) * dt);
+  // Up/down torques the flip the same way; let go and it carries on.
+  if (sk.flipIn) sk.flipRate += sk.flipIn * MO.FLIP_IN * dt;
+  else sk.flipRate *= Math.max(0, 1 - MO.FLIP_DAMP * dt);
+  sk.flip += sk.flipRate * dt;
   const speed = sk.vel.length();
   sk.vel.y -= G * A.airG * dt;
   if (speed > 0) sk.vel.multiplyScalar(Math.max(0, 1 - (sk.tuck ? MO.TUCK_DRAG : MO.DRAG) * speed * dt));
@@ -466,17 +496,20 @@ function land(s) {
   sk.vel.addScaledVector(n, -vn);
   sk.grounded = true;
   sk.spin = 0;
+  const off = Math.abs(wrapAngle(sk.flip));
+  sk.flip = 0; sk.flipRate = 0;
   const real = sk.airTime > REAL_AIR || sk.airMax > 0.5;
   sk.airTime = 0; sk.airMax = 0;
   if (!real) return;
   const f = skiDir(n, tmpF);
   const speed = sk.vel.length();
   const miss = speed > 2 ? Math.acos(clamp(sk.vel.dot(f) / speed, -1, 1)) : 0;
-  if (physics.crashes && (miss > BAIL.MISS * Math.PI / 180 || impact > BAIL.IMPACT)) {
+  const flipped = off > BAIL.FLIP * Math.PI / 180;
+  if (physics.crashes && (miss > BAIL.MISS * Math.PI / 180 || impact > BAIL.IMPACT || flipped)) {
     startBail(null, impact);
-  } else if (miss > A.clean * Math.PI / 180 || impact > HARD_IMPACT) {
-    // The skis scrub off speed that isn't along them.
-    sk.vel.multiplyScalar(Math.max(0.4, Math.cos(miss)));
+  } else if (miss > A.clean * Math.PI / 180 || impact > HARD_IMPACT || flipped) {
+    // The skis scrub off speed that isn't along them (or all of it that a mid-flip landing can't hold).
+    sk.vel.multiplyScalar(Math.max(0.4, Math.cos(miss)) * (flipped ? Math.max(0.4, Math.cos(off)) : 1));
     sk.landT = 0.45; sk.landQ = 'sloppy';
   } else {
     sk.landT = 0.25; sk.landQ = 'clean';
@@ -712,12 +745,12 @@ export function step() {
     return;
   }
   sk.steer = input.steer;
+  sk.flipIn = input.flip;
   sk.tuck = input.tuck;
   sk.brake = input.brake;
   sk.pole = input.pole && !sk.brake;
   if (keys.has('jump') && sk.grounded && !sk.crashed) { sk.charge += dt; sk.tuck = true; }
   else if (!jumpPressed) sk.charge = 0;
-  sk.poleT = Math.max(0, sk.poleT - dt);
   input.jump = jumpPressed && sk.grounded && !sk.crashed;
 
   sk.prev.copy(sk.pos);
@@ -727,8 +760,8 @@ export function step() {
   else airStep(dt);
   input.jump = false;
   if (state.hockeyStop && (sk.vel.length() < 1 || sk.crashed || !sk.grounded)) state.hockeyStop = false;
-  // a swipe's push waits out the pole cooldown, not a fall or jump
-  if (state.poleSwipe && (sk.poleT > 0 || sk.crashed || !sk.grounded)) state.poleSwipe = false;
+  // a press only counts on the ground
+  if (sk.crashed || !sk.grounded) { state.poleTap = false; sk.poleP = -1; sk.poleQ = false; }
   sk.landT = Math.max(0, sk.landT - dt);
   ensureTreesNear(sk.pos.x, sk.pos.z);
   state.solidY = sk.pos.y;
@@ -738,7 +771,7 @@ export function step() {
   // FreePlay never dead-ends: stalled on flat ground or off the map edge, you go back to the summit.
   // Stopped on a slope never counts: you can point downhill and go.
   const under = sample(sk.pos.x, sk.pos.z);
-  if (!sk.crashed && sk.grounded && sk.vel.length() < 1.5 && Math.hypot(under.gx, under.gz) < FLAT && !sk.pole) sk.stopT += dt;
+  if (!sk.crashed && sk.grounded && sk.vel.length() < 1.5 && Math.hypot(under.gx, under.gz) < FLAT && !sk.pole && sk.poleP < 0) sk.stopT += dt;
   else sk.stopT = 0;
   if (sk.stopT > STOP_TIME || offMap(sk.pos.x, sk.pos.z)) sendBack();
   state.solidY = null;

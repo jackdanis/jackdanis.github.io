@@ -9,7 +9,16 @@ import './atmosphere.js'; // load order: runs after atmosphere.js
 // 90 her right, 180 in front, in 22.5 degree steps; her left side mirrored), the frame's rect and its foot point, 64 px per m.
 // The frames are her body only; the skis are drawn on the physics ski plate. Wipeout and sit keep their own skis.
 // Lit per pixel from the normal map by sun, sky and snow bounce, snapped to four bands.
-export const FRAMES = { stand: 'stand', carveL: 'carve_l', carveR: 'carve_r', tuck: 'tuck', brake: 'brake', air: 'air', land: 'land', wipeout: 'wipeout', celebrate: 'celebrate', sit: 'sit' };
+// Double-poling uses its own sheet (goldie_pole.json, same layout): pole_reach, pole_plant, pole_crunch, pole_push.
+export const POLE_FRAMES = ['pole_reach', 'pole_plant', 'pole_crunch', 'pole_push'];
+export const FRAMES = { stand: 'stand', carveL: 'carve_l', carveR: 'carve_r', tuck: 'tuck', brake: 'brake', air: 'air', land: 'land', wipeout: 'wipeout', celebrate: 'celebrate', sit: 'sit', flip: 'flip' };
+// Flips use their own sheet (goldie_air.json): the tucked body from every camera direction round her, elevation -90
+// (from below) to 90 (from above) in 22.5 degree steps, each frame's anchor at the point she turns about. Her skis'
+// middle sits FLIP_SKIS from that point (m: up, forward in her body frame).
+export const FLIP_SKIS = [-0.664, 0.408];
+export const AIR_ELEVS = [-90, -67.5, -45, -22.5, 0, 22.5, 45, 67.5, 90];
+// The moving carve comes at three edge angles (degrees), frames carve15_l .. carve45_r; carve_l/r is the turn on the spot.
+export const CARVE_EDGES = [15, 30, 45];
 export const SHEET_PX = GOLDIE.pxPerM, [SHEET_W, SHEET_H] = GOLDIE.size;
 export const SHEET_YAWS = [0, 22.5, 45, 67.5, 90, 112.5, 135, 157.5, 180];
 export const SKIER_LIT = { sunColor: { value: SUN_COLOR }, skyColor: { value: SKY_COLOR }, bounce: { value: BOUNCE }, uLit: { value: 1 } };
@@ -28,7 +37,7 @@ const SNOWLIGHT_GLSL = `
 // Drawn a little toward the camera so the snow right around her feet never covers her (0.5 m) or her skis (0.3 m);
 // she stays ahead of her skis' middle, so her boots sit on them.
 const nudged = (m) => `vec4 mv = modelViewMatrix * vec4(position, 1.0);
-      mv.xyz += normalize(-mv.xyz) * ${m.toFixed(2)};
+      mv.xyz += normalize(-mv.xyz) * ${typeof m === 'string' ? m : m.toFixed(2)};
       gl_Position = projectionMatrix * mv;`;
 export const skierMat = new THREE.ShaderMaterial({
   uniforms: {
@@ -36,17 +45,19 @@ export const skierMat = new THREE.ShaderMaterial({
     normalMap: { value: goldieN },
     rect: { value: new THREE.Vector4() },
     mirror: { value: 0 },
+    nudge: { value: 0.5 },             // 0 on a lift: the seat back and cabin walls cover her as they should
     sunLocal: { value: new THREE.Vector3(0, 1, 0) },
     ...SKIER_LIT,
   },
   vertexShader: `
     uniform vec4 rect;
     uniform float mirror;
+    uniform float nudge;
     varying vec2 vUv;
     void main() {
       float u = mix(uv.x, 1.0 - uv.x, mirror);
       vUv = vec2(rect.x + u * rect.z, rect.y + (1.0 - uv.y) * rect.w);
-      ${nudged(0.5)}
+      ${nudged('nudge')}
     }`,
   fragmentShader: `
     uniform sampler2D map;
