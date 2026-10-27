@@ -103,7 +103,7 @@ for (const lift of LIFTS) {
     ];
     liftParts.push(...placed(parts, placeM(pts[i][0], g[i] - 0.4, pts[i][1], yaw)));
     casters.push({ x: pts[i][0], z: pts[i][1], h: th, w: 0.8 });
-    addObstacle({ x: pts[i][0], z: pts[i][1], y: g[i], r: 1.1, height: th });
+    addObstacle({ x: pts[i][0], z: pts[i][1], y: g[i], r: 1.1, height: th, what: 'lift tower' });
   }
   for (const i of [0, N - 1]) {
     const sd = stn[i], yaw = sd ? sd.yaw : dirAt(i) + (i === 0 ? Math.PI : 0), arm = st.arm;
@@ -130,11 +130,11 @@ for (const lift of LIFTS) {
       const L = 7, toW = (u, v) => [sd.x + sd.c * u + sd.s * v, sd.z - sd.s * u + sd.c * v];
       for (const [u, v, r] of [[0, 0, 0.6], [-(arm + 1.55), 1.2, 0.2], [arm + 1.55, 1.2, 0.2], [-(arm + 1.55), -L + 0.9, 0.2], [arm + 1.55, -L + 0.9, 0.2]]) {
         const [x, z] = toW(u, v);
-        addObstacle({ x, z, y: sd.y, r, height: hh });
+        addObstacle({ x, z, y: sd.y, r, height: hh, what: 'station post' });
       }
       // hut: solid 3 x 3 x 2.6 m box
       const [hutX, hutZ] = toW(sd.hut * (arm + 3.4), -L + 3.2);
-      SOLIDS.push({ x: hutX, z: hutZ, y: sd.y + 1.0, hx: 1.5, hy: 1.6, hz: 1.5, c: sd.c, s: sd.s });
+      SOLIDS.push({ x: hutX, z: hutZ, y: sd.y + 1.0, hx: 1.5, hy: 1.6, hz: 1.5, c: sd.c, s: sd.s, what: 'lift hut' });
       // no trees on the station or apron
       for (let jj = Math.floor((sd.bz0 - Z0) / CELL); jj <= Math.ceil((sd.bz1 - Z0) / CELL); jj++)
         for (let ii = Math.floor((sd.bx0 - X0) / CELL); ii <= Math.ceil((sd.bx1 - X0) / CELL); ii++)
@@ -198,7 +198,7 @@ if (apronGeos.length) {
   });
   scene.add(new THREE.Mesh(geo, mat));
 }
-// Kicker snow and lip mats, rebuilt when the 2 m tiles under them load or drop so they sit on the snow the skier rides.
+// Kicker, snow lip and mogul snow, kicker lip mats, rebuilt when the 2 m tiles under them load or drop so they sit on the snow the skier rides.
 export const kickSnowMat = new THREE.ShaderMaterial({
   uniforms: Object.assign({}, terrainMat.uniforms, { uPFar: { value: 1e9 } }), vertexShader: terrainMat.vertexShader, fragmentShader: terrainMat.fragmentShader,
   defines: { PATCH: 1 }, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4,
@@ -238,6 +238,8 @@ function buildKicker(k) {
   geo.setAttribute('aN', new THREE.BufferAttribute(new Float32Array(n * 3), 3));
   const group = new THREE.Group();
   group.add(new THREE.Mesh(geo, kickSnowMat));
+  group.position.set(k.x, y0, k.z);
+  if (k.plain) return group;
   // lip mats: red panels over the last KICK_LIP m, each with a white chevron
   const mats = [], panels = Math.max(2, Math.round(k.hw * 2 / 1.4)), pw = k.hw * 2 / panels, u0 = k.L - KICK_LIP;
   const at = (u, v, lift) => { const [x, y, z] = ground(u, v); return [x - k.x, y + k.prof(u) + lift - y0, z - k.z]; };
@@ -261,7 +263,6 @@ function buildKicker(k) {
     for (const sgn of [-1, 1]) poly([at(U(0.35), vm + sgn * q, 0.09), at(U(0.95), vm, 0.09), at(U(0.65), vm, 0.09), at(U(0.05), vm + sgn * q, 0.09)], KICK_WHITE);
   }
   group.add(new THREE.Mesh(merge(mats), kickMatMat));
-  group.position.set(k.x, y0, k.z);
   return group;
 }
 // 1 where 2 m tiles cover the kicker, 0 on the 10 m ground
