@@ -2,8 +2,8 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 import { state } from './state.js';
 import { CELL, PAGE, X0, Z0 } from './world.js';
-import { BOUNCE, FOG, LIGHT, SH_PX, SH_SIZE, SKIES, SKY_COLOR, SNOW_ALBEDO, SUN_COLOR, SUN_DIR, TIMES, camera, canvas, renderer, scene, sky } from './scene.js';
-import { casters, lampList } from './buildings.js';
+import { BOUNCE, FOG, LIGHT, SH_PX, SH_SIZE, SKIES, SKY_COLOR, SKY_EDGE, SKY_TOPS, SNOW_ALBEDO, SUN_COLOR, SUN_DIR, TIMES, camera, canvas, renderer, scene, sky } from './scene.js';
+import { casters, lampList, modelMat } from './buildings.js';
 import { atlas, pages, treeMat } from './trees.js';
 import { kickMatMat, kickSnowMat } from './lifts.js';
 import { mogulMat } from './snow.js';
@@ -131,11 +131,15 @@ export function applyTime(key) {
   LIGHT.uFogNear.value = T.fog[0]; LIGHT.uFogFar.value = T.fog[1];
   BOUNCE.copy(SUN_COLOR).multiplyScalar(Math.max(0, SUN_DIR.y)).addScaledVector(SKY_COLOR, 0.6).multiply(SNOW_ALBEDO);
   LIGHT.uLampC.value.set(...T.lamp);
-  sky.material.map = SKIES[key]; sky.material.needsUpdate = true;
+  const skyU = sky.material.uniforms;
+  skyU.uStrip.value = SKIES[key];
+  skyU.uHas.value = SKY_TOPS[key] ? 1 : 0; if (SKY_TOPS[key]) skyU.uTop.value = SKY_TOPS[key];
+  skyU.uEdge.value.copy(SKY_EDGE[key]);
   scene.background.setRGB(FOG.x, FOG.y, FOG.z, THREE.SRGBColorSpace);
   treeMat.uniforms.uA.value = key === 'storm' ? atlas.stormMap : atlas.map;
   treeMat.uniforms.uN.value = key === 'storm' ? atlas.stormNormal : atlas.normal;
   bulbMat.color.set(key === 'night' ? 0xffe9a8 : 0x2a2a2a);
+  modelMat.uniforms.uGlow.value = key === 'night' ? 1 : key === 'golden' ? 0.45 : 0;     // shop windows
   flakes.visible = key === 'storm';
   setLamps(key === 'night');
   paintShadows(true);

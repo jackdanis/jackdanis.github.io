@@ -6,22 +6,31 @@ import { state } from './state.js';
 import { clamp } from './config.js';
 import { BERM_W, BLEND, BRIDGES, CELL, H, META, NX, NZ, PCELL, POWDER, RUNF, SOLIDS, STATIONS, X0, Z0, addObstacle, aspen, cellAt, conifer, gridH, groundY, inflate, isRock, nearSolid, offMap, patchEdge, sample, sampleBase, sampleGrid, stationAt } from './world.js';
 import { LIGHT, LIGHT_GLSL, camera, queueWork, renderer, scene, terrainMat, workKey } from './scene.js';
-import { SNOWCAP, TILES, addBase, addBuilding, addIndustrial, addMapStand, addSamsKnob, addRichCabin, addTanHotel, addUp4Pizza, addVenga, addWestin, addWestinWing, addByPage, addRinged, bucket, casters, flushBuildings, merge, mergeAny, modelMat, part, placeM, placed } from './buildings.js';
-import { KIND, TREE_R, addProp } from './trees.js';
+import { SNOWCAP, TILES, addBase, addBuilding, addIndustrial, addKitBuilding, addLizardLodge, addAnnouncer, addTwoCreeks, addMapStand, addSamsKnob, addRichCabin, addTanHotel, addUp4Pizza, addVenga, addWestin, addWestinWing, addByPage, addRinged, bucket, casters, flushBuildings, merge, mergeAny, modelMat, part, placeM, placed } from './buildings.js';
+import { KIND, TRUNK_R, addProp } from './trees.js';
 import { LIFTS } from './lifts.js';
+import { addMountainProps } from './props.js';
+import { addGlades } from './glades.js';
 
 // ---------- Run props: trail signs, rope lines, fence ----------
 export const RUNS = MAP.runs || [];
 // Named buildings from Jack's laser notes batch 2 (2026-10-27), by stand-in block centre; SKIP blocks go
 const SPECIAL = [[2027.7, -5583.5, 'base'], [-390.8, -2971.7, 'sams'], [-158.7, -1013.2, 'up4'], [-342.3, -2936.9, 'map'],
-  [1433.0, -5080.8, 'venga'], [1331.8, -4955.0, 'westin'], [1254.6, -4938.7, 'wing'], [1189.5, -4928.4, 'tan']];   // batch 3
-const SKIP = [[-338.6, -2933.0],                      // a shed footprint inside the trail-map stand
+  [1433.0, -5080.8, 'venga'], [1331.8, -4955.0, 'westin'], [1254.6, -4938.7, 'wing'], [1189.5, -4928.4, 'tan'],   // batch 3
+  [424.2, -4442.9, 'lizard'], [447.5, -4368.0, 'announcer'],
+  // Two Creeks base camp: drawn on the B block as one rectangle over both B and C (C is skipped)
+  [4107.2, -5710.2, 'checkin'],                                                   // Two Creeks check-in (pin 12)
+  [4161.0, -5709.5, 'twocreeks', { x: 4186.5, z: -5702.1, yawD: -16.6, w: 78, l: 26, y0: 2470.6, y1: 2475.1 }]];                                                   // batch 5
+const SKIP = [[-338.6, -2933.0], [4203.8, -5696.7],   // the second Two Creeks block, inside the base camp                      // a shed footprint inside the trail-map stand
   [1300.1, -4972.3]];                                  // a box overlapping the Westin, which hid it
+// Areas whose stand-ins go [x0, x1, z0, z1]: the houses behind Two Creeks (batch 5, pin 14)
+const GONE = [[4080, 4200, -6180, -5900]];
 // Stand-in blocks drawn as industrial buildings, by centre: the maintenance buildings at Max Park (Jack's pin 4)
 // Rich cabins (batch 4, pins 8 to 15): every stand-in inside this box, the section between Lower Banzai, Adams' Avenue
 // (Lower) and Green Cabin (Lower) above Snowmass Mall; [x0, x1, z0, z1]
 const RICH_AREA = [1190, 1720, -4860, -4180];
 const RICH_KINDS = ['garage', 'chalet', 'hip'];
+const VILLAGE = MAP.meta.village;                     // the boilerplate kit's village blocks stand within 450 m of it
 const INDUSTRIAL = [[-350.8, -2846.4], [-383.6, -2840.6], [-358.8, -2826.2], [-332.5, -2854.8], [-334.8, -2866.2], [-338, -2874.4]];
 function nearestRunPoint(x, z) {
   let best = Infinity, at = [x, z + 1];
@@ -260,20 +269,32 @@ if (RUN_DATA) {
   for (let n = 0; n < B.ntrees; n++) {
     const o = n * 8, x = dv.getInt16(o, true) / 2, z = dv.getInt16(o + 2, true) / 2, height = dv.getUint8(o + 4) / 10, kind = dv.getUint8(o + 5) & 127;
     const ground = STATIONS.length && stationAt(x, z) ? groundY(x, z) : dv.getUint16(o + 6, true) / 10;
-    const t = { x, z, y: ground - (kind === KIND.snowghost ? 0.5 : 0.3), height, r: TREE_R[kind] * height, kind, fill: dv.getUint8(o + 5) >> 7 };
+    const t = { x, z, y: ground - (kind === KIND.snowghost ? 0.5 : 0.3), height, r: TRUNK_R[kind] * height, kind, fill: dv.getUint8(o + 5) >> 7 };
     addProp(t);
     addObstacle(t);
+  }
+  addGlades();                                     // after the real trees, so glade trees keep clear of them
+  // Flagged course on Scooper (Lower) (batch 5, pin 4): red and blue gates alternating every 20 m down a line 50 m
+  // beside the Scooper lift, 5 m either side of it. Markers only, no timing and no collision (gates bend).
+  {
+    const top = [275, -4218], d = [0.5, -0.867], n = [0.867, 0.5];
+    for (let g = 0; g < 9; g++) {
+      const a = 40 + g * 20, off = 50 + (g % 2 ? -5 : 5), x = top[0] + d[0] * a + n[0] * off, z = top[1] + d[1] * a + n[1] * off;
+      addProp({ x, z, y: groundY(x, z) - 0.1, height: 2, r: 0, kind: g % 2 ? KIND.gate_blue : KIND.gate_red });
+    }
   }
   // Stand-in blocks on building footprints until real buildings exist; skipped where they overlap a station or solid.
   // INDUSTRIAL blocks get the industrial building instead, SPECIAL blocks their named building.
   for (const [x, z, w, l, yawD, h, y0, y1] of B.blocks) {
     if (SKIP.some(([ix, iz]) => Math.hypot(ix - x, iz - z) < 1)) continue;
+    if (GONE.some(([x0, x1, z0, z1]) => x > x0 && x < x1 && z > z0 && z < z1)) continue;
     const special = SPECIAL.find(([ix, iz]) => Math.hypot(ix - x, iz - z) < 1);   // named buildings always stand
     if (!special && (nearSolid(x, z, Math.max(w, l) / 2) || (STATIONS.length && stationAt(x, z)))) continue;
     if (special) {
-      const yaw = yawD * Math.PI / 180, [rx, rz] = nearestRunPoint(x, z);
-      const lz = Math.sin(yaw) * (rx - x) + Math.cos(yaw) * (rz - z), lx = Math.cos(yaw) * (rx - x) - Math.sin(yaw) * (rz - z);
-      const b = { x, z, yaw, w, l, bot: y0 - 1, ground: y1, front: Math.sign(w >= l ? lz : lx) || 1 };
+      const o = { x, z, yawD, w, l, y0, y1, ...special[3] };                       // a named building may set its own frame
+      const yaw = o.yawD * Math.PI / 180, [rx, rz] = nearestRunPoint(o.x, o.z);
+      const lz = Math.sin(yaw) * (rx - o.x) + Math.cos(yaw) * (rz - o.z), lx = Math.cos(yaw) * (rx - o.x) - Math.sin(yaw) * (rz - o.z);
+      const b = { x: o.x, z: o.z, yaw, w: o.w, l: o.l, bot: o.y0 - 1, ground: o.y1, front: Math.sign(o.w >= o.l ? lz : lx) || 1 };
       if (special[2] === 'base') addBase(b);
       else if (special[2] === 'sams') addSamsKnob(b);
       else if (special[2] === 'map') addMapStand(b);
@@ -281,9 +302,12 @@ if (RUN_DATA) {
       else if (special[2] === 'westin') addWestin(b);
       else if (special[2] === 'wing') addWestinWing(b);
       else if (special[2] === 'tan') addTanHotel(b);
+      else if (special[2] === 'lizard') addLizardLodge(b);
+      else if (special[2] === 'twocreeks') addTwoCreeks(b);
+      else if (special[2] === 'checkin') addTwoCreeks(b, true);
       else {
         const g = sampleBase(x, z, { h: 0, gx: 0, gz: 0 }), n = Math.hypot(g.gx, g.gz) || 1;
-        addUp4Pizza(b, [g.gx / n, g.gz / n]);
+        (special[2] === 'announcer' ? addAnnouncer : addUp4Pizza)(b, [g.gx / n, g.gz / n]);
       }
       continue;
     }
@@ -302,8 +326,16 @@ if (RUN_DATA) {
       addRichCabin({ x, z, yaw, w, l, bot: y0 - 1, ground: y1, front: Math.sign(w >= l ? lz : lx) || 1 }, kind);
       continue;
     }
-    addBuilding({ x, z, yaw: yawD * Math.PI / 180, w, l, bot: y0 - 1, top: y1 + h, what: 'stand-in building' });
+    // the boilerplate kit (2026-11-02): huts on the mountain, village blocks round the Mall, condos on big footprints,
+    // chalet houses on the rest
+    {
+      const yaw = yawD * Math.PI / 180, [rx, rz] = nearestRunPoint(x, z), a = w * l;
+      const lz = Math.sin(yaw) * (rx - x) + Math.cos(yaw) * (rz - z), lx = Math.cos(yaw) * (rx - x) - Math.sin(yaw) * (rz - z);
+      const kind = y1 > 2900 || a < 40 ? 'hut' : Math.hypot(x - VILLAGE.x, z - VILLAGE.z) < 450 && a >= 300 ? 'village' : a >= 400 ? 'condo' : 'chalet';
+      addKitBuilding({ x, z, yaw, w, l, h, bot: y0 - 1, ground: y1, front: Math.sign(w >= l ? lz : lx) || 1 }, kind);
+    }
   }
+  addMountainProps();
   flushBuildings();
 }
 // Groomer frame for the 2 m run mesh: each vertex's distance along and across the nearest groomed run line (and that
