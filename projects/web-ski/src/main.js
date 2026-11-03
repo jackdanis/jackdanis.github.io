@@ -19,6 +19,7 @@ import { updateMoguls } from './snow.js';
 import { updatePark } from './park.js';
 import { updateLandforms } from './landforms.js';
 import { updateAudio } from './audio.js';
+import { updateWorldCollision } from './collview.js';
 import { MAP } from '../data/mountain.js';
 
 // ---------- Rendering ----------
@@ -305,7 +306,7 @@ function render(alpha, dt) {
   updateMoguls();
   updateRings();
   updateTrees(snap);
-  sky.position.set(camera.position.x, camera.position.y + sky.userData.h * 0.36, camera.position.z);
+  sky.position.copy(camera.position);
 
   const dY = riding ? 0 : drawnSnowDY(p.x, p.z);
   drawSkier(p, riding, dY);
@@ -329,6 +330,7 @@ function render(alpha, dt) {
   runWork();
   state.workAll = false;
   updateNotes();
+  updateWorldCollision();
   renderer.render(scene, camera);
   perf.tris = renderer.info.render.triangles; perf.calls = renderer.info.render.calls;
   updateHudMap();

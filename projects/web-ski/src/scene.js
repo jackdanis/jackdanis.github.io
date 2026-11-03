@@ -107,29 +107,61 @@ export const [goldiePoleT, goldiePoleN] = await Promise.all([loadTex('sprites/go
 goldiePoleT.flipY = goldiePoleN.flipY = false;
 export const GOLDIE_POLE = await (await fetch(new URL('../assets/sprites/goldie_pole.json', import.meta.url))).json();
 export const SKIES = { noon: skyT, golden: skyRest[0], night: skyRest[1], storm: skyRest[2] };
+export const SKY_TOPS = Object.fromEntries(await Promise.all(['noon', 'golden', 'night'].map(async (k) => {
+  const t = await loadTex(`sky/top_${k}`, { pixel: false });
+  t.colorSpace = THREE.SRGBColorSpace;
+  return [k, t];
+})));
+// the colour of each strip's top row, where the cap meets it
+export const SKY_EDGE = Object.fromEntries(Object.entries(SKIES).map(([k, t]) => {
+  const im = t.image, cv = document.createElement('canvas');
+  cv.width = im.width; cv.height = 2;
+  const g = cv.getContext('2d');
+  g.drawImage(im, 0, 0, im.width, 2, 0, 0, im.width, 2);
+  const d = g.getImageData(0, 0, im.width, 1).data;
+  let r = 0, gg = 0, b = 0;
+  for (let i = 0; i < d.length; i += 4) { r += d[i]; gg += d[i + 1]; b += d[i + 2]; }
+  const n = d.length / 4;
+  return [k, new THREE.Color().setRGB(r / n / 255, gg / n / 255, b / n / 255, THREE.SRGBColorSpace)];
+}));
 export const [stationT, stationN] = await Promise.all([loadTex('textures/station_atlas'), loadTex('textures/station_atlas_n')]);
-export const TREE_KINDS = ['spruce', 'fir', 'aspen', 'snowghost', 'pole', 'sign'];
+export const TREE_KINDS = ['spruce', 'fir', 'aspen', 'snowghost', 'pole', 'sign', 'gate_red', 'gate_blue', 'outcrop'];
 const loadImg = (n) => new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = asset(n); });
 export const treeImgs = await Promise.all(TREE_KINDS.flatMap((k) => [k, k + '_n']).map((n) => loadImg(`sprites/${n}`)));
 // storm: the snow-plastered spruce replaces the spruce
 export const stormImgs = await Promise.all(['sprites/storm_spruce', 'sprites/storm_spruce_n'].map(loadImg));
 
-// Sky strip on an open cylinder that rides with the camera, drawn behind everything.
+// The sky (2026-11-02): one sphere that rides with the camera, drawn behind everything. Each direction picks its colour
+// from its height above the horizon: the time of day's sky strip wraps the lower sky (mirrored four times round, as
+// the old cylinder did), and from about 20 degrees up it blends into the sky-top image, laid over the zenith like a
+// fisheye photo. Storm has no sky-top image: its strip fades into the strip's own top colour.
 export const sky = (() => {
-  for (const t of Object.values(SKIES)) {
-    t.colorSpace = THREE.SRGBColorSpace;
-    t.wrapS = THREE.MirroredRepeatWrapping;
-    t.repeat.set(4, 0.86);
-    t.offset.set(0, 0.14);
-  }
-  const R = 1000, HS = 2 * Math.PI * R / 4 * (192 / 344) * 0.86;
-  const mat = new THREE.MeshBasicMaterial({ map: skyT, side: THREE.BackSide, depthWrite: false, depthTest: false, fog: false });
-  const m = new THREE.Mesh(new THREE.CylinderGeometry(R, R, HS, 48, 1, true), mat);
+  for (const t of [...Object.values(SKIES), ...Object.values(SKY_TOPS)]) { t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.needsUpdate = true; }
+  const mat = new THREE.ShaderMaterial({
+    uniforms: { uStrip: { value: skyT }, uTop: { value: SKY_TOPS.noon }, uEdge: { value: new THREE.Color() }, uHas: { value: 1 } },
+    vertexShader: 'varying vec3 vDir; void main() { vDir = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: `uniform sampler2D uStrip, uTop; uniform vec3 uEdge; uniform float uHas; varying vec3 vDir;
+      void main() {
+        vec3 d = normalize(vDir);
+        float e = asin(clamp(d.y, -1.0, 1.0));
+        // strip: 4 mirrored copies round the horizon; its rows run from 6 degrees below the horizon to 33 above
+        float x = (atan(d.z, d.x) / 6.2831853 + 0.5) * 4.0, m = mod(x, 2.0), u = m < 1.0 ? m : 2.0 - m;
+        float v = clamp((tan(clamp(e, -0.5, 1.2)) + 0.105) / 0.754, 0.0, 1.0);
+        vec3 strip = texture2D(uStrip, vec2(u, 0.14 + 0.86 * v)).rgb;
+        strip = mix(strip, uEdge, smoothstep(0.75, 1.0, v));
+        // top: fisheye over the zenith, its rim at about 20 degrees up
+        vec2 q = d.xz / (1.0 + d.y);
+        vec3 top = uHas > 0.5 ? texture2D(uTop, 0.5 + q * 0.62).rgb : uEdge;
+        gl_FragColor = vec4(mix(strip, top, smoothstep(0.30, 0.62, e)), 1.0);
+        #include <colorspace_fragment>
+      }`,
+    side: THREE.BackSide, depthWrite: false, depthTest: false, fog: false,
+  });
+  const m = new THREE.Mesh(new THREE.SphereGeometry(1000, 48, 24), mat);
   m.renderOrder = -2;
   m.frustumCulled = false;
-  m.userData.h = HS;
   scene.add(m);
-  // below the strip, the haze color
+  // below the sky, the haze color
   scene.background = new THREE.Color().setRGB(FOG.x, FOG.y, FOG.z, THREE.SRGBColorSpace);
   return m;
 })();
