@@ -1,10 +1,12 @@
 // Sound effects, all synthesized with Web Audio (no recorded files): ski hiss on the snow, wind that rises with speed,
 // pole plants and the landing thump. Music: Jack's own tracks, played one after another with a crossfade, through a
 // small-speaker filter (the We Ski sound). Phones only allow sound after a touch, so it starts on the first tap or key.
+// Music is off by default; the Tab menu's Music row turns it on.
 import { state } from './state.js';
 import { clamp } from './config.js';
 import { surfaceAt } from './world.js';
 import { POLE_PHASES, sk } from './play.js';
+import { WIND } from './wind.js';
 
 const V_TOP = 30;                     // m/s (67 mph): the hiss and wind are at full here
 const PLANT = POLE_PHASES[0];         // where in a double-pole push the poles hit the snow
@@ -18,7 +20,7 @@ const SONGS = ['jack-jazz.mp3'].map((f) => `assets/music/${f}`);
 let ctx = null, master, noise;
 let hiss, scrape, wind;
 let was = { grounded: true, crashed: false, poleP: -1, air: 0 };
-const music = { decks: [], cur: 0, song: 0, fails: 0 };
+const music = { decks: [], cur: 0, song: 0, fails: 0, on: false };
 
 function noiseBuffer() {
   const b = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
@@ -70,10 +72,18 @@ function startMusic() {
     el.addEventListener('playing', () => { music.fails = 0; });
     music.decks.push({ el, gain });
   }
-  // Phones only let an audio element play if it was first started from a touch: wake the spare deck now too.
-  const spare = music.decks[1].el;
-  spare.src = SONGS[0]; spare.play().then(() => spare.pause(), () => {});
-  playSong(0, 1.5);
+  // Phones only let an audio element play if it was first started from a touch: wake both decks now, silent.
+  for (const { el } of music.decks) { el.src = SONGS[0]; el.play().then(() => el.pause(), () => {}); }
+}
+// Music is off until the Tab menu turns it on; turning it off fades it out and pauses it.
+function setMusic(on) {
+  music.on = on;
+  if (on) { playSong(music.song, 1.5); return; }
+  for (const d of music.decks) {
+    d.gain.gain.cancelScheduledValues(ctx.currentTime);
+    d.gain.gain.setTargetAtTime(0, ctx.currentTime, 0.1);
+    setTimeout(() => { if (!music.on) d.el.pause(); }, 500);
+  }
 }
 function playSong(i, fade) {
   const d = music.decks[music.cur];
@@ -99,7 +109,7 @@ document.addEventListener('visibilitychange', () => {
   if (!ctx) return;
   if (document.hidden) ctx.suspend(); else ctx.resume();
   const el = music.decks[music.cur]?.el;
-  if (el) { if (document.hidden) el.pause(); else el.play().catch(() => {}); }
+  if (el && music.on) { if (document.hidden) el.pause(); else el.play().catch(() => {}); }
 });
 
 const set = (param, v, tc = 0.06) => param.setTargetAtTime(v, ctx.currentTime, tc);
@@ -141,8 +151,9 @@ function thump(k, sloppy) {
 export function updateAudio() {
   if (!ctx) return;
   set(master.gain, state.sound ? VOLUME : 0, 0.03);
+  if (state.music !== music.on) setMusic(state.music);
   const el = music.decks[music.cur].el;
-  if (el.duration && el.duration - el.currentTime < XFADE) nextSong();
+  if (music.on && el.duration && el.duration - el.currentTime < XFADE) nextSong();
   const skiing = state.phase === 'skiing';
   const speed = skiing ? sk.vel.length() : 0;
   const v = clamp(speed / V_TOP, 0, 1.3);
@@ -155,10 +166,10 @@ export function updateAudio() {
   set(hiss.filter.frequency, (powder ? 700 : 1000) + 900 * v + 500 * sk.edge);
   // Skid: a rougher, lower scrape while the skis slide sideways or brake.
   set(scrape.gain.gain, onSnow ? clamp(sk.skid, 0, 1) * Math.min(1, speed / 4) * 0.45 * SNOW_VOL : 0);
-  // Wind: grows with speed squared, a slow gust on top, and stays on through the air.
-  const gust = 0.75 + 0.25 * Math.sin(ctx.currentTime * 0.7) * Math.sin(ctx.currentTime * 1.9);
-  set(wind.gain.gain, skiing ? 0.65 * v * v * gust : 0, 0.15);
-  set(wind.filter.frequency, 250 + 900 * v);
+  // Wind: grows with speed squared, and the mountain's own wind (wind.js) gusts on top of it, heard even standing still.
+  const gust = 0.7 + 0.45 * WIND.gust, air = clamp(WIND.speed / 12, 0, 1);
+  set(wind.gain.gain, skiing ? 0.65 * v * v * gust + 0.18 * air * air : 0, 0.15);
+  set(wind.filter.frequency, 250 + 900 * v + 500 * WIND.gust);
 
   if (skiing) {
     const p = sk.poleP;
