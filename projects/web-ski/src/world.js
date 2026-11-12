@@ -3,7 +3,7 @@
 import { MAP } from '../data/mountain.js';
 import { RUN_DATA } from '../data/runs.js';
 import { state } from './state.js';
-import { EDGE_MARGIN, SNOW, cellKey, clamp } from './config.js';
+import { EDGE_MARGIN, SNOW, cellKey, clamp, ease } from './config.js';
 
 // ---------- Map data ----------
 export async function inflate(b64) {
@@ -116,6 +116,11 @@ export function nearSolid(x, z, pad) {
   return SOLIDS.some((b) => { if (b.what === 'rope' || b.what === 'fence') return false;   // ropes and fences don't keep buildings and signs away
     const dx = x - b.x, dz = z - b.z; return Math.abs(b.c * dx - b.s * dz) < b.hx + pad && Math.abs(b.s * dx + b.c * dz) < b.hz + pad; });
 }
+// inside a building or station box, padded (ropes, fences and bridge walls aside): keeps trees off walls
+export function inBuilding(x, z, pad) {
+  return solidsAt(x, z).some((b) => { if (b.what === 'rope' || b.what === 'fence' || b.what === 'bridge wall') return false;
+    const dx = x - b.x, dz = z - b.z; return Math.abs(b.c * dx - b.s * dz) < b.hx + pad && Math.abs(b.s * dx + b.c * dz) < b.hz + pad; });
+}
 // SOLIDS bucketed in 32 m cells, each box in every cell its reach (plus 1 m for the body) touches, in SOLIDS order;
 // rebuilt whenever boxes are added
 const SOLID_CELL = 32, solidGrid = new Map(), NO_SOLIDS = [];
@@ -184,14 +189,21 @@ const KICK_SIZES = {
   lipS: { h: 1.0, a: 20, w: 10, back: 35, plain: true },       // the same, 1 m
 };
 const KICK_AT = [                                              // m down the run from its top, or the lip's edge at a spot
-  { run: 'Cabin', d: 330, size: 'medium' },
+  { run: 'Cabin', d: 330, size: 'medium', face: [0.332, -0.943] },   // face: the course from the jump line to the bridge
   { run: 'Cabin', d: 720, size: 'large' },
   { run: 'Cabin', d: 1290, size: 'small' },
+  // the park's jump zones from the trail map (Jack 2026-11-11): M/L top, M/L mid, M/L lower, S/M bottom, each pair side by
+  // side; the Cabin kickers above make one of each pair
+  { at: [517.0, -3412.0], size: 'large', face: [0.332, -0.943] },     // top, beside Cabin's medium
+  { at: [522.0, -3659.0], size: 'medium', along: 'Cabin' },    // mid, below the culvert bridge on Cabin's line
+  { at: [538.0, -3651.0], size: 'large', along: 'Cabin' },
+  { at: [591.0, -3786.0], size: 'medium', along: 'Cabin' },    // lower, beside Cabin's large
+  { at: [896.0, -4265.0], size: 'medium', along: 'Cabin' },    // bottom, beside Cabin's small
   { at: [2417.7, -3868.7], size: 'lip' },                      // laser note 8 (2026-10-27): "can we make it a bit larger?"
   { at: [3288.9, -4782.7], size: 'lipS' },                     // laser note 17: the roll-over Jack liked, smoothed away
                                                                // when the snow past it became a run, built back
-  { at: [400.8, -3289.1], size: 'small' },                     // terrain park jump line beside the jibs (batch 4, park.js)
-  { at: [465.2, -3339.0], size: 'medium' },                    // then on to Cabin's medium kicker
+  { at: [400.8, -3289.1], size: 'small', toward: [465.2, -3339.0] },   // terrain park jump line beside the jibs (batch 4,
+  { at: [465.2, -3339.0], size: 'medium', toward: [533, -3422] },      // park.js), then on to Cabin's medium kicker
 ];
 const MOGUL_AT = [                                             // centre, length down the fall line, width across
   { at: [-30.5, -2186.9], len: 60, wide: 32 },                 // Mick's Gully, laser note 24 (2026-10-27)
@@ -210,6 +222,22 @@ export const GROUND_ADD = [];                                         // more sh
     return [-gx / g, -gz / g];
   };
   const bounds = (k, r) => Object.assign(k, { bx0: k.x - r, bx1: k.x + r, bz0: k.z - r, bz1: k.z + r });
+  // Park kickers face along the course, not straight down the fall line (Jack's laser notes batch 6, pin 3): a kicker on
+  // a run (run, or along) faces along its nearest stretch; toward: faces a point; face: a given direction
+  const runDir = (name, x, z) => {
+    const run = (MAP.runs || []).find((r) => r.name === name);
+    if (!run) return null;
+    let best = 1e9, d = null;
+    for (let i = 0; i < run.points.length - 1; i++) {
+      const [ax, az] = run.points[i], [bx, bz] = run.points[i + 1], l = Math.hypot(bx - ax, bz - az);
+      if (l < 1e-6) continue;
+      const t = Math.max(0, Math.min(l, ((x - ax) * (bx - ax) + (z - az) * (bz - az)) / l)), e = Math.hypot(x - ax - (bx - ax) * t / l, z - az - (bz - az) * t / l);
+      if (e < best) { best = e; d = [(bx - ax) / l, (bz - az) / l]; }
+    }
+    return d;
+  };
+  const faceOf = (at, x, z) => at.face ? at.face : at.toward ? (([dx, dz]) => { const l = Math.hypot(dx, dz); return [dx / l, dz / l]; })([at.toward[0] - x, at.toward[1] - z])
+    : (at.run || at.along) ? runDir(at.run || at.along, x, z) || fall(x, z) : fall(x, z);
   for (const at of KICK_AT) {
     let x, z;
     const S = KICK_SIZES[at.size], A = S.a * Math.PI / 180;
@@ -223,11 +251,11 @@ export const GROUND_ADD = [];                                         // more sh
         x = ax + (bx - ax) * f; z = az + (bz - az) * f; left -= len;
       }
     } else {
-      // the foot sits L up the fall line from the given edge
-      const [fx, fz] = fall(at.at[0], at.at[1]);
+      // the foot sits L back from the given edge
+      const [fx, fz] = faceOf(at, at.at[0], at.at[1]);
       x = at.at[0] - fx * L; z = at.at[1] - fz * L;
     }
-    const [fx, fz] = fall(x, z);
+    const [fx, fz] = faceOf(at, x, z);
     const back = S.table ? Math.tan(S.land * Math.PI / 180) : Math.tan((S.back || 50) * Math.PI / 180);
     const top = L + (S.table || 0), end = top + S.h / back;
     const prof = (u) => u <= 0 ? 0 : u <= L ? R - Math.sqrt(R * R - u * u) : u <= top ? S.h : Math.max(0, S.h - (u - top) * back);
@@ -239,7 +267,6 @@ export const GROUND_ADD = [];                                         // more sh
   for (const at of MOGUL_AT) {
     const [fx, fz] = fall(at.at[0], at.at[1]), hw = at.wide / 2, end = at.len, w = 2 * Math.PI / MOGUL.wave;
     const x = at.at[0] - fx * end / 2, z = at.at[1] - fz * end / 2;
-    const ease = (t) => { t = Math.min(1, Math.max(0, t)); return t * t * (3 - 2 * t); };
     // staggered rows: bumps where both waves crest together, troughs between; faded in over the edges
     const hAt = (u, v) => {
       if (u <= 0 || u >= end || Math.abs(v) >= hw) return 0;

@@ -41,9 +41,6 @@ export const MO = {
   SPIN_DAMP: 0.4,               // spin lost per second with no steer
   FLIP_IN: 5,                   // rad/s^2: up/down in the air torques a flip (up = front flip), and it carries on
   FLIP_DAMP: 0.4,               // flip lost per second with nothing held
-  CRASH_MU: 0.6,                // a wipeout slides with friction plus a base drag
-  CRASH_BASE: 2,
-  CRASH_MAX: 5,                 // s before she self-arrests on any slope
 };
 export const ASSIST = { grip: 1.2, cap: 34, capDrag: 0.25, airG: 1.15, clean: 25 };
 // ---------- Carve physics ----------
@@ -59,7 +56,7 @@ export const CV = {
   SKID_TURN: 2.6,               // rad/s extra pivot in a skidded turn
   SKID_BRAKE: 2.5,              // m/s^2 extra braking in a skidded turn
   TUCK_TURN: 0.5,               // tucked, the tightest turn is twice as wide
-  DRAG: 0.0045, TUCK_DRAG: 0.0024, // sea-level drag...
+  DRAG: MO.DRAG, TUCK_DRAG: MO.TUCK_DRAG, // sea-level drag (same as MO)...
   AIR_SCALE: 8500,              // ...times exp(-altitude / AIR_SCALE)
   GLIDE: 3,                     // m/s: friction runs from 1.2x the snow's figure at rest
                                 // toward 0.6x at speed
@@ -93,6 +90,8 @@ export const LOD_DIST = [250, 700, 1800, 4000]; // m to a piece's edge where it 
 
 // ---------- Small helpers ----------
 export const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+// smoothstep on 0..1, clamped
+export const ease = (t) => { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); };
 export const wrapAngle = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 export function hash2(i, j) {
   let h = (Math.imul(i, 374761393) + Math.imul(j, 668265263)) | 0;
